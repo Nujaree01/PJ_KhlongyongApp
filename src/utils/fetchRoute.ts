@@ -1,0 +1,129 @@
+import Constants from "expo-constants";
+import { Coordinate, Landmark } from "../types";
+
+const DIRECTIONS_API_KEY: string | undefined =
+  Constants.expoConfig?.extra?.googleDirectionsApiKey;
+
+const DIRECTIONS_URL = "https://maps.googleapis.com/maps/api/directions/json";
+
+/**
+ * ถอดรหัส Encoded Polyline ที่ Google Directions API ส่งกลับมา
+ * ให้เป็น array ของพิกัด [{latitude, longitude}, ...]
+ * อ้างอิงอัลกอริทึมมาตรฐานของ Google Polyline Encoding
+ */
+function decodePolyline(encoded: string): Coordinate[] {
+  const points: Coordinate[] = [];
+  let index = 0;
+  let lat = 0;
+  let lng = 0;
+
+  while (index < encoded.length) {
+    let b: number;
+    let shift = 0;
+    let result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const deltaLat = result & 1 ? ~(result >> 1) : result >> 1;
+    lat += deltaLat;
+
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const deltaLng = result & 1 ? ~(result >> 1) : result >> 1;
+    lng += deltaLng;
+
+    points.push({ latitude: lat / 1e5, longitude: lng / 1e5 });
+  }
+
+  return points;
+}
+
+interface FetchRouteResult {
+  coordinates: Coordinate[];
+  distanceMeters: number;
+  durationSeconds: number;
+  isFallback: boolean;
+}
+
+/**
+ * เรียก Google Directions API เพื่อคำนวณเส้นทางตามถนนจริง
+ * ผ่านจุดแวะ (waypoints) ตามลำดับสถานที่ที่กำหนด
+ *
+ * หากไม่มี API key หรือเรียก API ไม่สำเร็จ จะ fallback กลับไปใช้
+ * เส้นตรงเชื่อมระหว่างพิกัดของแต่ละสถานที่แทน เพื่อให้แอปยังใช้งานได้
+ */
+export async function fetchRouteCoordinates(
+  landmarksInOrder: Landmark[]
+): Promise<FetchRouteResult> {
+  const straightLineFallback = (): FetchRouteResult => ({
+    coordinates: landmarksInOrder.map((l) => l.coordinate),
+    distanceMeters: 0,
+    durationSeconds: 0,
+    isFallback: true,
+  });
+
+  if (!DIRECTIONS_API_KEY || landmarksInOrder.length < 2) {
+    return straightLineFallback();
+  }
+
+  const origin = landmarksInOrder[0].coordinate;
+  const destination = landmarksInOrder[landmarksInOrder.length - 1].coordinate;
+  const middlePoints = landmarksInOrder.slice(1, -1);
+
+  // Google Directions รองรับ waypoint ไม่เกิน 25 จุด (ไม่รวม origin/destination)
+  const waypointsParam = middlePoints
+    .map((l) => `${l.coordinate.latitude},${l.coordinate.longitude}`)
+    .join("|");
+
+  const params = new URLSearchParams({
+    origin: `${origin.latitude},${origin.longitude}`,
+    destination: `${destination.latitude},${destination.longitude}`,
+    mode: "driving",
+    language: "th",
+    key: DIRECTIONS_API_KEY,
+  });
+  if (waypointsParam) {
+    // ใช้ waypoints ตามลำดับที่กำหนดจริง (ไม่ให้ Google ปรับลำดับเอง)
+    params.set("waypoints", waypointsParam);
+  }
+
+  try {
+    const response = await fetch(`${DIRECTIONS_URL}?${params.toString()}`);
+    const data = await response.json();
+
+    if (data.status !== "OK" || !data.routes?.length) {
+      console.warn("Directions API ไม่สำเร็จ:", data.status, data.error_message);
+      return straightLineFallback();
+    }
+
+    const route = data.routes[0];
+    const legs = route.legs ?? [];
+    const distanceMeters = legs.reduce(
+      (sum: number, leg: any) => sum + (leg.distance?.value ?? 0),
+      0
+    );
+    const durationSeconds = legs.reduce(
+      (sum: number, leg: any) => sum + (leg.duration?.value ?? 0),
+      0
+    );
+
+    const coordinates = decodePolyline(route.overview_polyline.points);
+
+    return {
+      coordinates,
+      distanceMeters,
+      durationSeconds,
+      isFallback: false,
+    };
+  } catch (error) {
+    console.warn("เรียก Directions API ไม่สำเร็จ ใช้เส้นตรงสำรองแทน:", error);
+    return straightLineFallback();
+  }
+}

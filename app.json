@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "เที่ยวชุมชนคลองโยง",
+    "slug": "khlongyong-tourism-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E24B4A"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyCL3ytVnsjwggxpvkEv27E65W3Ym2jXBZc"
+      },
+      "bundleIdentifier": "com.khlongyong.tourism"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#E24B4A"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCL3ytVnsjwggxpvkEv27E65W3Ym2jXBZc"
+        }
+      },
+      "package": "com.khlongyong.tourism"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "googleDirectionsApiKey": "AIzaSyB9Z5hlZMDHHbMr2bUpCM098_1ukTvQ6xs"
+    }
+  }
+}

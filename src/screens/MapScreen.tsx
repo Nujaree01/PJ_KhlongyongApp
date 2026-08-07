@@ -1,246 +1,337 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useRef } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Linking,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  Platform,
+  Alert,
 } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { LANDMARKS, TOTAL_ROUTE_DISTANCE_KM } from "../data/landmarks";
-import { Coordinate, Landmark } from "../types";
-import { fetchRouteCoordinates } from "../utils/fetchRoute";
-import { CATEGORY_COLORS, COLORS } from "../theme/colors";
+import {
+  PLACES,
+  Place,
+  ROUTE_COORDINATES,
+  ROUTE_TITLE,
+  ROUTE_TOTAL_DISTANCE_KM,
+  CATEGORY_COLORS,
+} from "../data/places";
 import PlaceDetailModal from "../components/PlaceDetailModal";
+import { useVisitCounts } from "../utils/Visitcounter";
+
+const INITIAL_REGION = {
+  latitude: 13.83,
+  longitude: 100.255,
+  latitudeDelta: 0.14,
+  longitudeDelta: 0.14,
+};
 
 export default function MapScreen() {
-  const mapRef = useRef<MapView>(null);
-  const [routeCoords, setRouteCoords] = useState<Coordinate[]>(
-    LANDMARKS.map((l) => l.coordinate)
-  );
-  const [isLoadingRoute, setIsLoadingRoute] = useState(true);
-  const [isFallbackRoute, setIsFallbackRoute] = useState(true);
-  const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(
-    null
-  );
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const mapRef = useRef<MapView>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      setIsLoadingRoute(true);
-      const result = await fetchRouteCoordinates(LANDMARKS);
-      if (!isMounted) return;
-      setRouteCoords(result.coordinates);
-      setIsFallbackRoute(result.isFallback);
-      setIsLoadingRoute(false);
-    })();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const { counts, recordVisit, resetAll, totalVisits, visitedPlacesCount } =
+    useVisitCounts();
 
-  const handleMarkerPress = (landmark: Landmark) => {
-    setSelectedLandmark(landmark);
+  const openPlace = (place: Place) => {
+    setSelectedPlace(place);
     setModalVisible(true);
+    recordVisit(place.id); // นับจำนวนครั้งที่เข้าชมสถานที่นี้
+
     mapRef.current?.animateToRegion(
       {
-        latitude: landmark.coordinate.latitude,
-        longitude: landmark.coordinate.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        latitudeDelta: 0.03,
+        longitudeDelta: 0.03,
       },
-      400
+      450
     );
   };
 
-  const handleCardPress = (landmark: Landmark) => {
-    handleMarkerPress(landmark);
-  };
+  const closeModal = () => setModalVisible(false);
 
-  const handleNavigatePress = (landmark: Landmark) => {
-    const { latitude, longitude } = landmark.coordinate;
-    const url = Platform.select({
-      ios: `maps:0,0?q=${latitude},${longitude}`,
-      android: `geo:0,0?q=${latitude},${longitude}(${encodeURIComponent(
-        landmark.name
-      )})`,
-      default: `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
-    });
-    if (url) Linking.openURL(url);
+  const handleResetStats = () => {
+    Alert.alert(
+      "รีเซ็ตสถิติการเข้าชม",
+      "ต้องการล้างจำนวนการเข้าชมทั้งหมดหรือไม่?",
+      [
+        { text: "ยกเลิก", style: "cancel" },
+        { text: "รีเซ็ต", style: "destructive", onPress: resetAll },
+      ]
+    );
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerSubtitle}>เส้นทางท่องเที่ยวเชื่อมโยง</Text>
-        <Text style={styles.headerTitle}>พุทธมณฑล → ตลาดน้ำลำพญา</Text>
-        <View style={styles.headerRow}>
-          <MaterialCommunityIcons name="map-marker-distance" size={14} color="#fff" />
-          <Text style={styles.headerMeta}>
-            ระยะทางรวมประมาณ {TOTAL_ROUTE_DISTANCE_KM} กิโลเมตร
+    <SafeAreaView style={styles.container}>
+      <View style={styles.headerBar}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>{ROUTE_TITLE}</Text>
+          <Text style={styles.headerSubtitle}>
+            ระยะทางรวมประมาณ {ROUTE_TOTAL_DISTANCE_KM} กิโลเมตร · {PLACES.length} จุด
           </Text>
-          {isFallbackRoute && !isLoadingRoute && (
-            <Text style={styles.headerMetaWarn}> · เส้นทางประมาณ (ไม่มี API key)</Text>
-          )}
         </View>
+
+        {/* สรุปสถิติการเข้าชม */}
+        <TouchableOpacity
+          style={styles.statsBadge}
+          onPress={handleResetStats}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.statsNumber}>{totalVisits}</Text>
+          <Text style={styles.statsLabel}>
+            เข้าชม · {visitedPlacesCount}/{PLACES.length} จุด
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.mapWrapper}>
-        <MapView
-          ref={mapRef}
-          style={StyleSheet.absoluteFillObject}
-          provider={PROVIDER_GOOGLE}
-          initialRegion={{
-            latitude: 13.865,
-            longitude: 100.245,
-            latitudeDelta: 0.35,
-            longitudeDelta: 0.35,
-          }}
-        >
-          <Polyline
-            coordinates={routeCoords}
-            strokeColor={COLORS.routeRed}
-            strokeWidth={4}
-          />
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
+        initialRegion={INITIAL_REGION}
+        onMapReady={() => console.log("✅ MAP READY - แผนที่โหลดสำเร็จ")}
+        onError={(e) => console.log("❌ MAP ERROR:", e.nativeEvent)}
+      >
+        <Polyline
+          coordinates={ROUTE_COORDINATES}
+          strokeColor="#D7263D"
+          strokeWidth={4}
+        />
 
-          {LANDMARKS.map((landmark) => {
-            const colors = CATEGORY_COLORS[landmark.category];
-            return (
-              <Marker
-                key={landmark.id}
-                coordinate={landmark.coordinate}
-                onPress={() => handleMarkerPress(landmark)}
-              >
+        {PLACES.map((place) => {
+          const visitCount = counts[place.id] ?? 0;
+          return (
+            <Marker
+              key={place.id}
+              coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+              onPress={() => openPlace(place)}
+            >
+              <View style={styles.markerWrapper}>
                 <View
                   style={[
                     styles.markerPin,
-                    { backgroundColor: colors.fill, borderColor: colors.text },
+                    { backgroundColor: CATEGORY_COLORS[place.category] },
                   ]}
                 >
-                  <Text style={[styles.markerText, { color: colors.text }]}>
-                    {landmark.order}
-                  </Text>
+                  <Text style={styles.markerText}>{place.order}</Text>
                 </View>
-              </Marker>
+                {visitCount > 0 && (
+                  <View style={styles.visitBadge}>
+                    <Text style={styles.visitBadgeText}>
+                      {visitCount > 99 ? "99+" : visitCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </Marker>
+          );
+        })}
+      </MapView>
+
+      {/* การ์ดสถานที่แบบเลื่อนแนวนอน */}
+      <View style={styles.cardsWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.cardsRow}
+        >
+          {PLACES.map((place) => {
+            const visitCount = counts[place.id] ?? 0;
+            return (
+              <TouchableOpacity
+                key={place.id}
+                style={styles.card}
+                onPress={() => openPlace(place)}
+                activeOpacity={0.85}
+              >
+                <View style={styles.cardTopRow}>
+                  <View
+                    style={[
+                      styles.cardDot,
+                      { backgroundColor: CATEGORY_COLORS[place.category] },
+                    ]}
+                  >
+                    <Text style={styles.cardDotText}>{place.order}</Text>
+                  </View>
+                  {visitCount > 0 && (
+                    <View style={styles.cardVisitTag}>
+                      <Text style={styles.cardVisitTagText}>
+                        👁 {visitCount}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.cardTitle} numberOfLines={2}>
+                  {place.name}
+                </Text>
+                <Text style={styles.cardSubtitle} numberOfLines={1}>
+                  {place.highlight}
+                </Text>
+              </TouchableOpacity>
             );
           })}
-        </MapView>
-
-        {isLoadingRoute && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator color={COLORS.routeRed} />
-            <Text style={styles.loadingText}>กำลังคำนวณเส้นทางตามถนนจริง...</Text>
-          </View>
-        )}
+        </ScrollView>
       </View>
 
-      <FlatList
-        horizontal
-        data={LANDMARKS}
-        keyExtractor={(item) => item.id}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.cardList}
-        renderItem={({ item }) => {
-          const colors = CATEGORY_COLORS[item.category];
-          const isSelected = selectedLandmark?.id === item.id;
-          return (
-            <TouchableOpacity
-              style={[styles.card, isSelected && styles.cardSelected]}
-              onPress={() => handleCardPress(item)}
-            >
-              <View style={[styles.cardIcon, { backgroundColor: colors.fill }]}>
-                <MaterialCommunityIcons
-                  name={colors.icon as any}
-                  size={22}
-                  color={colors.text}
-                />
-              </View>
-              <Text style={styles.cardTitle} numberOfLines={2}>
-                {item.name}
-              </Text>
-            </TouchableOpacity>
-          );
-        }}
-      />
-
       <PlaceDetailModal
-        landmark={selectedLandmark}
+        place={selectedPlace}
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onNavigatePress={handleNavigatePress}
+        onClose={closeModal}
+        visitCount={selectedPlace ? counts[selectedPlace.id] ?? 0 : 0}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  header: {
-    backgroundColor: COLORS.routeRed,
-    paddingTop: 14,
-    paddingHorizontal: 16,
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFBF3",
+  },
+  headerBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingTop: 10,
     paddingBottom: 10,
+    backgroundColor: "#FFFBF3",
   },
-  headerSubtitle: { color: "#fff", opacity: 0.85, fontSize: 11 },
-  headerTitle: { color: "#fff", fontSize: 17, fontWeight: "700", marginTop: 2 },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: 6,
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#2D2A26",
   },
-  headerMeta: { color: "#fff", fontSize: 12, opacity: 0.9 },
-  headerMetaWarn: { color: "#FDE9E9", fontSize: 11 },
-  mapWrapper: { flex: 1 },
-  loadingOverlay: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    right: 12,
-    backgroundColor: "rgba(255,255,255,0.95)",
-    borderRadius: 10,
-    padding: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  headerSubtitle: {
+    fontSize: 12.5,
+    color: "#8A8378",
+    marginTop: 2,
   },
-  loadingText: { fontSize: 12, color: COLORS.textSecondary },
-  markerPin: {
-    width: 28,
-    height: 28,
+  statsBadge: {
+    backgroundColor: "#2D2A26",
     borderRadius: 14,
-    borderWidth: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: "center",
+    marginLeft: 10,
+  },
+  statsNumber: {
+    color: "#FFFBF3",
+    fontWeight: "800",
+    fontSize: 16,
+  },
+  statsLabel: {
+    color: "#C9C2B3",
+    fontSize: 9.5,
+    marginTop: 1,
+  },
+  map: {
+    flex: 1,
+  },
+  markerWrapper: {
     alignItems: "center",
     justifyContent: "center",
   },
-  markerText: { fontSize: 12, fontWeight: "700" },
-  cardList: { paddingHorizontal: 12, paddingVertical: 12, gap: 10 },
+  markerPin: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
+  markerText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 13,
+  },
+  visitBadge: {
+    position: "absolute",
+    top: -6,
+    right: -10,
+    backgroundColor: "#D7263D",
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF",
+  },
+  visitBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+  cardsWrapper: {
+    position: "absolute",
+    bottom: 16,
+    left: 0,
+    right: 0,
+  },
+  cardsRow: {
+    paddingHorizontal: 14,
+    gap: 10,
+  },
   card: {
-    width: 110,
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 8,
+    width: 150,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 12,
     marginRight: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 5,
   },
-  cardSelected: {
-    borderWidth: 2,
-    borderColor: COLORS.routeRed,
+  cardTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
   },
-  cardIcon: {
-    height: 52,
-    borderRadius: 8,
+  cardDot: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: "center",
     justifyContent: "center",
+  },
+  cardDotText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 12,
+  },
+  cardVisitTag: {
+    backgroundColor: "#F3ECDB",
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  cardVisitTagText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "#6B5A2E",
   },
   cardTitle: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: COLORS.textPrimary,
-    marginTop: 6,
+    fontSize: 13.5,
+    fontWeight: "700",
+    color: "#2D2A26",
+  },
+  cardSubtitle: {
+    fontSize: 11.5,
+    color: "#8A8378",
+    marginTop: 3,
   },
 });

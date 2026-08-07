@@ -1,134 +1,127 @@
 import React, { useEffect, useRef } from "react";
 import {
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
   Animated,
   Dimensions,
-  Modal,
+  ScrollView,
   Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
 } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Landmark } from "../types";
-import { CATEGORY_COLORS, CATEGORY_LABELS, COLORS } from "../theme/colors";
+import { Place, CATEGORY_COLORS, CATEGORY_LABELS } from "../data/places";
 
 interface Props {
-  landmark: Landmark | null;
+  place: Place | null;
   visible: boolean;
   onClose: () => void;
-  onNavigatePress?: (landmark: Landmark) => void;
+  visitCount?: number;
 }
 
-const SCREEN_HEIGHT = Dimensions.get("window").height;
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function PlaceDetailModal({
-  landmark,
+  place,
   visible,
   onClose,
-  onNavigatePress,
+  visitCount = 0,
 }: Props) {
-  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
   useEffect(() => {
     if (visible) {
-      Animated.spring(translateY, {
+      Animated.spring(slideAnim, {
         toValue: 0,
         useNativeDriver: true,
-        bounciness: 6,
-        speed: 14,
+        bounciness: 4,
       }).start();
     } else {
-      Animated.timing(translateY, {
-        toValue: SCREEN_HEIGHT,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
+      slideAnim.setValue(SCREEN_HEIGHT);
     }
   }, [visible]);
 
-  if (!landmark) return null;
+  if (!place) return null;
 
-  const colors = CATEGORY_COLORS[landmark.category];
+  const accentColor = CATEGORY_COLORS[place.category];
 
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="none"
+      animationType="fade"
       onRequestClose={onClose}
     >
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable onPress={(e) => e.stopPropagation()}>
           <Animated.View
-            style={[styles.sheet, { transform: [{ translateY }] }]}
+            style={[
+              styles.sheet,
+              { transform: [{ translateY: slideAnim }] },
+            ]}
           >
-            <View style={styles.handle} />
+            <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
 
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={onClose}
-              accessibilityLabel="ปิด"
-            >
-              <MaterialCommunityIcons name="close" size={18} color={COLORS.textSecondary} />
-            </TouchableOpacity>
-
-            <View style={styles.headerRow}>
-              <View style={[styles.iconCircle, { backgroundColor: colors.fill }]}>
-                <MaterialCommunityIcons
-                  name={colors.icon as any}
-                  size={28}
-                  color={colors.text}
-                />
-              </View>
-              <View style={styles.headerText}>
-                <Text style={[styles.orderLabel, { color: colors.text }]}>
-                  จุดที่ {landmark.order} · {CATEGORY_LABELS[landmark.category]}
-                </Text>
-                <Text style={styles.title}>{landmark.name}</Text>
-                {landmark.nameEn ? (
-                  <Text style={styles.subtitle}>{landmark.nameEn}</Text>
+            <View style={styles.header}>
+              <View style={{ flex: 1 }}>
+                <View
+                  style={[styles.badge, { backgroundColor: accentColor + "22" }]}
+                >
+                  <Text style={[styles.badgeText, { color: accentColor }]}>
+                    {CATEGORY_LABELS[place.category]}
+                  </Text>
+                </View>
+                <Text style={styles.title}>{place.name}</Text>
+                {place.nameEn ? (
+                  <Text style={styles.subtitle}>{place.nameEn}</Text>
                 ) : null}
+                {visitCount > 0 && (
+                  <Text style={styles.visitCountText}>
+                    👁 เข้าชมแล้ว {visitCount} ครั้ง
+                  </Text>
+                )}
               </View>
-            </View>
 
-            <Text style={styles.description}>{landmark.description}</Text>
-
-            {typeof landmark.distanceFromStartKm === "number" && (
-              <View style={styles.metaRow}>
-                <MaterialCommunityIcons
-                  name="map-marker-distance"
-                  size={16}
-                  color={COLORS.textSecondary}
-                />
-                <Text style={styles.metaText}>
-                  ห่างจากจุดเริ่มต้นประมาณ {landmark.distanceFromStartKm} กม.
-                </Text>
-              </View>
-            )}
-
-            {landmark.isCoordinateApproximate && (
-              <View style={styles.metaRow}>
-                <MaterialCommunityIcons
-                  name="map-marker-alert-outline"
-                  size={16}
-                  color={COLORS.textSecondary}
-                />
-                <Text style={styles.metaText}>
-                  ตำแหน่งบนแผนที่เป็นค่าประมาณ
-                </Text>
-              </View>
-            )}
-
-            <View style={styles.actionRow}>
               <TouchableOpacity
-                style={styles.navigateButton}
-                onPress={() => onNavigatePress?.(landmark)}
+                style={styles.closeButton}
+                onPress={onClose}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <MaterialCommunityIcons name="directions" size={18} color="#fff" />
-                <Text style={styles.navigateButtonText}>นำทางไปจุดนี้</Text>
+                <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
             </View>
+
+            <ScrollView
+              style={styles.body}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text style={styles.description}>{place.description}</Text>
+
+              {place.tips && place.tips.length > 0 && (
+                <View style={styles.tipsBox}>
+                  <Text style={styles.tipsHeader}>💡 เคล็ดลับการเที่ยว</Text>
+                  {place.tips.map((tip, idx) => (
+                    <Text key={idx} style={styles.tipItem}>
+                      • {tip}
+                    </Text>
+                  ))}
+                </View>
+              )}
+
+              {place.openHours && (
+                <Text style={styles.metaLine}>🕒 {place.openHours}</Text>
+              )}
+              {place.phone && (
+                <Text style={styles.metaLine}>📞 {place.phone}</Text>
+              )}
+            </ScrollView>
+
+            <TouchableOpacity
+              style={[styles.closeCta, { backgroundColor: accentColor }]}
+              onPress={onClose}
+            >
+              <Text style={styles.closeCtaText}>ปิดหน้าต่างนี้</Text>
+            </TouchableOpacity>
           </Animated.View>
         </Pressable>
       </Pressable>
@@ -139,99 +132,110 @@ export default function PlaceDetailModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: COLORS.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    paddingBottom: 32,
+    backgroundColor: "#FFFBF3",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: SCREEN_HEIGHT * 0.65,
+    paddingBottom: 24,
+    overflow: "hidden",
   },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: COLORS.border,
-    alignSelf: "center",
-    marginBottom: 12,
+  accentBar: {
+    height: 5,
+    width: "100%",
   },
-  closeButton: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: COLORS.surface,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
-  },
-  headerRow: {
+  header: {
     flexDirection: "row",
-    gap: 12,
     alignItems: "flex-start",
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 8,
   },
-  iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+  badge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginBottom: 8,
   },
-  headerText: {
-    flex: 1,
-  },
-  orderLabel: {
+  badgeText: {
     fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 2,
+    fontWeight: "700",
   },
   title: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: COLORS.textPrimary,
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#2D2A26",
   },
   subtitle: {
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: "#8A8378",
     marginTop: 2,
   },
-  description: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    lineHeight: 21,
-    marginTop: 16,
-  },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 10,
-  },
-  metaText: {
+  visitCountText: {
     fontSize: 12,
-    color: COLORS.textSecondary,
+    color: "#B08900",
+    marginTop: 5,
+    fontWeight: "600",
   },
-  actionRow: {
-    flexDirection: "row",
-    marginTop: 20,
-  },
-  navigateButton: {
-    flex: 1,
-    backgroundColor: COLORS.routeRed,
-    borderRadius: 10,
-    paddingVertical: 12,
-    flexDirection: "row",
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#EFE9DD",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    marginLeft: 8,
   },
-  navigateButtonText: {
-    color: "#fff",
-    fontWeight: "600",
+  closeButtonText: {
+    fontSize: 16,
+    color: "#2D2A26",
+    fontWeight: "700",
+  },
+  body: {
+    paddingHorizontal: 20,
+    marginTop: 6,
+  },
+  description: {
+    fontSize: 15,
+    lineHeight: 23,
+    color: "#4A453D",
+  },
+  tipsBox: {
+    marginTop: 16,
+    backgroundColor: "#FFF3D6",
+    borderRadius: 14,
+    padding: 14,
+  },
+  tipsHeader: {
     fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 6,
+    color: "#7A5B10",
+  },
+  tipItem: {
+    fontSize: 13.5,
+    color: "#6B5A2E",
+    lineHeight: 20,
+  },
+  metaLine: {
+    fontSize: 14,
+    marginTop: 10,
+    color: "#4A453D",
+  },
+  closeCta: {
+    marginHorizontal: 20,
+    marginTop: 18,
+    paddingVertical: 13,
+    borderRadius: 14,
+    alignItems: "center",
+  },
+  closeCtaText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 15,
   },
 });

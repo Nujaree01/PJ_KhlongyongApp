@@ -1,5 +1,5 @@
 import Constants from "expo-constants";
-import { Coordinate, Landmark } from "../types";
+import { Coordinate } from "../types";
 
 const DIRECTIONS_API_KEY: string | undefined =
   Constants.expoConfig?.extra?.googleDirectionsApiKey;
@@ -60,26 +60,25 @@ interface FetchRouteResult {
  * เส้นตรงเชื่อมระหว่างพิกัดของแต่ละสถานที่แทน เพื่อให้แอปยังใช้งานได้
  */
 export async function fetchRouteCoordinates(
-  landmarksInOrder: Landmark[]
+  waypointsInOrder: Coordinate[]
 ): Promise<FetchRouteResult> {
   const straightLineFallback = (): FetchRouteResult => ({
-    coordinates: landmarksInOrder.map((l) => l.coordinate),
+    coordinates: waypointsInOrder,
     distanceMeters: 0,
     durationSeconds: 0,
     isFallback: true,
   });
 
-  if (!DIRECTIONS_API_KEY || landmarksInOrder.length < 2) {
+  if (!DIRECTIONS_API_KEY || waypointsInOrder.length < 2) {
     return straightLineFallback();
   }
 
-  const origin = landmarksInOrder[0].coordinate;
-  const destination = landmarksInOrder[landmarksInOrder.length - 1].coordinate;
-  const middlePoints = landmarksInOrder.slice(1, -1);
-
+  const origin = waypointsInOrder[0];
+  const destination = waypointsInOrder[waypointsInOrder.length - 1];
+  const middlePoints = waypointsInOrder.slice(1, -1);
   // Google Directions รองรับ waypoint ไม่เกิน 25 จุด (ไม่รวม origin/destination)
   const waypointsParam = middlePoints
-    .map((l) => `${l.coordinate.latitude},${l.coordinate.longitude}`)
+    .map((l) => `${l.latitude},${l.longitude}`)
     .join("|");
 
   const params = new URLSearchParams({

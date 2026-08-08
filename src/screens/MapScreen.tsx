@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { fetchRouteCoordinates } from "../utils/fetchRoute";
 import {
   View,
   Text,
@@ -36,6 +37,29 @@ export default function MapScreen() {
   const { counts, recordVisit, resetAll, totalVisits, visitedPlacesCount } =
     useVisitCounts();
 
+  const [roadRoute, setRoadRoute] = useState(ROUTE_COORDINATES);
+  const [routeInfo, setRouteInfo] = useState<{
+    distanceKm: number;
+    durationMin: number;
+  } | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchRouteCoordinates(ROUTE_COORDINATES).then((result) => {
+      if (!isMounted) return;
+      setRoadRoute(result.coordinates);
+      if (!result.isFallback) {
+        setRouteInfo({
+          distanceKm: result.distanceMeters / 1000,
+          durationMin: result.durationSeconds / 60,
+        });
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const openPlace = (place: Place) => {
     setSelectedPlace(place);
     setModalVisible(true);
@@ -71,7 +95,9 @@ export default function MapScreen() {
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{ROUTE_TITLE}</Text>
           <Text style={styles.headerSubtitle}>
-            ระยะทางรวมประมาณ {ROUTE_TOTAL_DISTANCE_KM} กิโลเมตร · {PLACES.length} จุด
+            {routeInfo
+              ? `ระยะทางจริงตามถนน ${routeInfo.distanceKm.toFixed(1)} กม. · ประมาณ ${Math.round(routeInfo.durationMin)} นาที`
+              : `ระยะทางรวมประมาณ ${ROUTE_TOTAL_DISTANCE_KM} กิโลเมตร · ${PLACES.length} จุด`}
           </Text>
         </View>
 
@@ -93,11 +119,9 @@ export default function MapScreen() {
         style={styles.map}
         provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
         initialRegion={INITIAL_REGION}
-        onMapReady={() => console.log("✅ MAP READY - แผนที่โหลดสำเร็จ")}
-        onError={(e) => console.log("❌ MAP ERROR:", e.nativeEvent)}
       >
         <Polyline
-          coordinates={ROUTE_COORDINATES}
+          coordinates={roadRoute}
           strokeColor="#D7263D"
           strokeWidth={4}
         />

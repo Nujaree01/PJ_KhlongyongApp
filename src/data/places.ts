@@ -33,11 +33,11 @@ export const PLACES: Place[] = [
     {
         id: "phutthamonthon",
         order: 1,
-        name: "อุทยานพุทธมณฑล",
+        name: "สวนพุทธมณฑล",
         nameEn: "Phutthamonthon Park",
         category: "start",
-        latitude: 13.7975,
-        longitude: 100.2967,
+        latitude: 13.7768069,
+        longitude: 100.3210139,
         description:
             "จุดเริ่มต้นเส้นทางท่องเที่ยว ตั้งอยู่บนถนนอุทยาน (Utthayan Road) บริเวณรอยต่อกรุงเทพฯ-นครปฐม เป็นสวนสาธารณะขนาดใหญ่ ศูนย์รวมงานพุทธศิลป์และพระพุทธรูปยืนปางลีลาองค์ใหญ่",
         highlight: "จุดเริ่มต้นเส้นทาง",
@@ -49,47 +49,47 @@ export const PLACES: Place[] = [
         name: "ตลาดน้ำดอนหวาย",
         nameEn: "Don Wai Floating Market",
         category: "market",
-        latitude: 13.8161,
-        longitude: 100.2809,
+        latitude: 13.7673,
+        longitude: 100.2848,
         description:
             "ตลาดริมคลองเก่าแก่ที่ยังคงวิถีชีวิตชุมชนริมน้ำ ขึ้นชื่อเรื่องอาหารพื้นบ้าน ขนมไทย และผลไม้ตามฤดูกาล เหมาะสำหรับแวะพักผ่อนและชิมอาหารก่อนเดินทางต่อ",
         highlight: "ตลาดริมคลองวิถีไทย",
         tips: ["แนะนำมาช่วงเช้าถึงบ่าย ร้านค้าจะคึกคักที่สุด"],
     },
     {
-        id: "airorchid",
-        order: 3,
-        name: "สวนกล้วยไม้แอร์ออร์คิดส์",
-        nameEn: "Air Orchids Farm",
-        category: "nature",
-        latitude: 13.8247,
-        longitude: 100.2612,
-        description:
-            "แหล่งเพาะปลูกและจำหน่ายกล้วยไม้คุณภาพส่งออก นักท่องเที่ยวสามารถเดินชมโรงเรือนกล้วยไม้หลากสายพันธุ์ และเลือกซื้อกล้วยไม้กลับบ้านได้",
-        highlight: "สวนกล้วยไม้เพื่อการส่งออก",
-        tips: ["ควรสวมรองเท้าที่เดินสบาย พื้นโรงเรือนอาจชื้น"],
-    },
-    {
         id: "kokNongNa",
-        order: 4,
+        order: 3,
         name: "ศูนย์เรียนรู้โคก หนอง นา โมเดล",
         nameEn: "Khok Nong Na Learning Center",
         category: "learning",
-        latitude: 13.8322,
-        longitude: 100.2498,
+        latitude: 13.85715,
+        longitude: 100.27780,
         description:
             "ศูนย์เรียนรู้เกษตรทฤษฎีใหม่ตามแนวพระราชดำริ สาธิตการบริหารจัดการพื้นที่แบบ โคก หนอง นา เปิดให้เยี่ยมชมและศึกษาดูงานด้านเกษตรพอเพียง",
         highlight: "ศูนย์เรียนรู้เกษตรพอเพียง",
         tips: ["เหมาะสำหรับกลุ่มศึกษาดูงาน ควรติดต่อล่วงหน้า"],
     },
     {
+        id: "ssru",
+        order: 4,
+        name: "มหาวิทยาลัยราชภัฏสวนสุนันทา วิทยาเขตนครปฐม",
+        nameEn: "SSRU Nakhon Pathom Campus",
+        category: "university",
+        latitude: 13.8688935,
+        longitude: 100.2730046,
+        description:
+            "วิทยาเขตของมหาวิทยาลัยราชภัฏสวนสุนันทา ตั้งอยู่ในพื้นที่ตำบลคลองโยง เป็นแหล่งเรียนรู้และจัดกิจกรรมร่วมกับชุมชนโดยรอบ",
+        highlight: "สถาบันการศึกษาประจำพื้นที่",
+    },
+    
+    {
         id: "watmakluea",
         order: 5,
         name: "วัดมะเกลือ",
         nameEn: "Wat Makluea",
         category: "temple",
-        latitude: 13.8398,
-        longitude: 100.2401,
+        latitude: 13.8831534,
+        longitude: 100.2880267,
         description:
             "วัดเก่าแก่ประจำชุมชนคลองโยง เป็นศูนย์รวมจิตใจของคนในพื้นที่ สถาปัตยกรรมไทยดั้งเดิม เหมาะแก่การแวะสักการะพระและพักผ่อนใจ",
         highlight: "วัดศูนย์รวมใจชุมชน",
@@ -100,23 +100,24 @@ export const PLACES: Place[] = [
         name: "เลมอนมีฟาร์ม",
         nameEn: "Lemon Mee Farm",
         category: "farm",
-        latitude: 13.8462,
-        longitude: 100.2313,
+        latitude: 13.8852826,
+        longitude: 100.2861124,
         description:
             "ฟาร์มเกษตรท่องเที่ยวเชิงสร้างสรรค์ เปิดให้นักท่องเที่ยวเข้าชมแปลงปลูกผลไม้และผลิตภัณฑ์แปรรูปจากผลผลิตในชุมชน ถ่ายรูปสวย ๆ ได้รอบฟาร์ม",
         highlight: "ฟาร์มเกษตรท่องเที่ยว",
     },
     {
-        id: "ssru",
+        id: "airorchid",
         order: 7,
-        name: "มหาวิทยาลัยราชภัฏสวนสุนันทา วิทยาเขตนครปฐม",
-        nameEn: "SSRU Nakhon Pathom Campus",
-        category: "university",
-        latitude: 13.8283,
-        longitude: 100.2419,
+        name: "ซูเปอร์มาร์เก็ตกล้วยไม้แอร์ออร์คิดส์",
+        nameEn: "Air Orchids & Lab",
+        category: "nature",
+        latitude: 13.9198375,
+        longitude: 100.2618041,
         description:
-            "วิทยาเขตของมหาวิทยาลัยราชภัฏสวนสุนันทา ตั้งอยู่ในพื้นที่ตำบลคลองโยง เป็นแหล่งเรียนรู้และจัดกิจกรรมร่วมกับชุมชนโดยรอบ",
-        highlight: "สถาบันการศึกษาประจำพื้นที่",
+            "แหล่งเพาะปลูกและจำหน่ายกล้วยไม้คุณภาพส่งออก นักท่องเที่ยวสามารถเดินชมโรงเรือนกล้วยไม้หลากสายพันธุ์ และเลือกซื้อกล้วยไม้กลับบ้านได้",
+        highlight: "สวนกล้วยไม้เพื่อการส่งออก",
+        tips: ["ควรสวมรองเท้าที่เดินสบาย พื้นโรงเรือนอาจชื้น"],
     },
     {
         id: "watlamphaya",
@@ -124,8 +125,8 @@ export const PLACES: Place[] = [
         name: "ตลาดน้ำวัดลำพญา",
         nameEn: "Wat Lam Phaya Floating Market",
         category: "end",
-        latitude: 13.8654,
-        longitude: 100.2098,
+        latitude: 13.958667,
+        longitude: 100.203467,
         description:
             "จุดหมายปลายทางของเส้นทาง ตลาดน้ำชื่อดังริมคลองลำพญา สัมผัสวิถีชีวิตริมน้ำ อาหารและของกินท้องถิ่นหลากหลาย เป็นจุดปิดทริปที่สมบูรณ์แบบ",
         highlight: "จุดหมายปลายทาง",
@@ -133,7 +134,7 @@ export const PLACES: Place[] = [
     },
 ];
 
-// สีประจำหมวดหมู่ (อ้างอิงโทนจากอินโฟกราฟิกต้นแบบ)
+
 export const CATEGORY_COLORS: Record<PlaceCategory, string> = {
     start: "#8B1E3F",
     end: "#2B6CB0",

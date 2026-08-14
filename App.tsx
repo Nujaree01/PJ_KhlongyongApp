@@ -14,7 +14,7 @@ export default function App() {
     <NavigationContainer>
       <StatusBar style="light" />
       <Tab.Navigator
-        initialRouteName="Model 4D"
+        initialRouteName="Info"
         screenOptions={({ route }) => ({
           headerShown: false,
           tabBarActiveTintColor: COLORS.routeRed,
@@ -22,7 +22,7 @@ export default function App() {
           tabBarIcon: ({ color, size }) => {
             const iconMap: Record<string, string> = {
               แผนที่: "map-outline",
-              "Model 4D": "shape-outline",
+              "Info": "shape-outline",
             };
             return (
               <MaterialCommunityIcons
@@ -35,7 +35,7 @@ export default function App() {
         })}
       >
         <Tab.Screen name="แผนที่" component={MapScreen} />
-        <Tab.Screen name="Model 4D" component={Model4DScreen} />
+        <Tab.Screen name="Info" component={Model4DScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );

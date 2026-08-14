@@ -62,7 +62,7 @@ export default function Model4DScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Text style={styles.headerSubtitle}>โมเดลการพัฒนา</Text>
-        <Text style={styles.headerTitle}>Model 4D ชุมชนคลองโยง</Text>
+        <Text style={styles.headerTitle}>Information ชุมชนคลองโยง</Text>
       </View>
 
       <View style={styles.pillarGrid}>

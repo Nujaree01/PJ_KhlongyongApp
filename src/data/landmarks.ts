@@ -1,10 +1,5 @@
 import { Landmark } from "../types";
 
-/**
- * พิกัดที่ทำเครื่องหมาย isCoordinateApproximate: true ยังเป็นค่าประมาณ
- * ควรเปิด Google Maps เทียบตำแหน่งจริงแล้วแก้ไขให้แม่นยำก่อนใช้งานจริง
- * (พิกัดของ อุทยานพุทธมณฑล และ ตลาดน้ำดอนหวาย อ้างอิงจากตำแหน่งสาธารณะที่รู้จักทั่วไป)
- */
 export const LANDMARKS: Landmark[] = [
   {
     id: "start-phutthamonthon",

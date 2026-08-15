@@ -6,11 +6,6 @@ const DIRECTIONS_API_KEY: string | undefined =
 
 const DIRECTIONS_URL = "https://maps.googleapis.com/maps/api/directions/json";
 
-/**
- * ถอดรหัส Encoded Polyline ที่ Google Directions API ส่งกลับมา
- * ให้เป็น array ของพิกัด [{latitude, longitude}, ...]
- * อ้างอิงอัลกอริทึมมาตรฐานของ Google Polyline Encoding
- */
 function decodePolyline(encoded: string): Coordinate[] {
   const points: Coordinate[] = [];
   let index = 0;
@@ -52,13 +47,6 @@ interface FetchRouteResult {
   isFallback: boolean;
 }
 
-/**
- * เรียก Google Directions API เพื่อคำนวณเส้นทางตามถนนจริง
- * ผ่านจุดแวะ (waypoints) ตามลำดับสถานที่ที่กำหนด
- *
- * หากไม่มี API key หรือเรียก API ไม่สำเร็จ จะ fallback กลับไปใช้
- * เส้นตรงเชื่อมระหว่างพิกัดของแต่ละสถานที่แทน เพื่อให้แอปยังใช้งานได้
- */
 export async function fetchRouteCoordinates(
   waypointsInOrder: Coordinate[]
 ): Promise<FetchRouteResult> {

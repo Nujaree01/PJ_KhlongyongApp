@@ -1,8 +1,8 @@
 import { LandmarkCategory } from "../types";
 
 export const COLORS = {
-  routeRed: "#E24B4A",
-  routeRedDark: "#A32D2D",
+  routeRed: "#2FBB15",
+  routeRedDark: "#1F8A0D",
   background: "#FFFFFF",
   surface: "#F7F5F0",
   textPrimary: "#2C2C2A",

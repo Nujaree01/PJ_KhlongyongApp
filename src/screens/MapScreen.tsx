@@ -1,26 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { fetchRouteCoordinates } from "../utils/Fetchroute";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  Platform,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
-import {
-  PLACES,
-  Place,
-  ROUTE_COORDINATES,
-  ROUTE_TITLE,
-  ROUTE_TOTAL_DISTANCE_KM,
-  CATEGORY_COLORS,
-} from "../data/places";
+import { PLACES, Place, ROUTE_COORDINATES, ROUTE_TITLE, ROUTE_TOTAL_DISTANCE_KM, } from "../data/places";
 import PlaceDetailModal from "../components/PlaceDetailModal";
 import { useVisitCounts } from "../utils/Visitcounter";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { COLORS, CATEGORY_COLORS } from "../theme/colors";
 
 const INITIAL_REGION = {
   latitude: 13.83,
@@ -33,9 +20,9 @@ export default function MapScreen() {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const mapRef = useRef<MapView>(null);
+  const insets = useSafeAreaInsets();
 
-  const { counts, recordVisit, resetAll, totalVisits, visitedPlacesCount } =
-    useVisitCounts();
+  const { counts, recordVisit } = useVisitCounts();
 
   const [roadRoute, setRoadRoute] = useState(ROUTE_COORDINATES);
   const [routeInfo, setRouteInfo] = useState<{
@@ -63,7 +50,7 @@ export default function MapScreen() {
   const openPlace = (place: Place) => {
     setSelectedPlace(place);
     setModalVisible(true);
-    recordVisit(place.id); // นับจำนวนครั้งที่เข้าชมสถานที่นี้
+    recordVisit(place.id);
 
     mapRef.current?.animateToRegion(
       {
@@ -75,19 +62,14 @@ export default function MapScreen() {
       450
     );
   };
+  const showFullRoute = () => {
+    mapRef.current?.fitToCoordinates(ROUTE_COORDINATES, {
+      edgePadding: { top: 60, right: 40, bottom: 180, left: 40 },
+      animated: true,
+    });
+  };
 
   const closeModal = () => setModalVisible(false);
-
-  const handleResetStats = () => {
-    Alert.alert(
-      "รีเซ็ตสถิติการเข้าชม",
-      "ต้องการล้างจำนวนการเข้าชมทั้งหมดหรือไม่?",
-      [
-        { text: "ยกเลิก", style: "cancel" },
-        { text: "รีเซ็ต", style: "destructive", onPress: resetAll },
-      ]
-    );
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -100,18 +82,6 @@ export default function MapScreen() {
               : `ระยะทางรวมประมาณ ${ROUTE_TOTAL_DISTANCE_KM} กิโลเมตร · ${PLACES.length} จุด`}
           </Text>
         </View>
-
-        {/* สรุปสถิติการเข้าชม */}
-        <TouchableOpacity
-          style={styles.statsBadge}
-          onPress={handleResetStats}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.statsNumber}>{totalVisits}</Text>
-          <Text style={styles.statsLabel}>
-            เข้าชม · {visitedPlacesCount}/{PLACES.length} จุด
-          </Text>
-        </TouchableOpacity>
       </View>
 
       <MapView
@@ -138,10 +108,14 @@ export default function MapScreen() {
                 <View
                   style={[
                     styles.markerPin,
-                    { backgroundColor: CATEGORY_COLORS[place.category] },
+                    { backgroundColor: CATEGORY_COLORS[place.category].fill },
                   ]}
                 >
-                  <Text style={styles.markerText}>{place.order}</Text>
+                  <MaterialCommunityIcons
+                    name={CATEGORY_COLORS[place.category].icon as any}
+                    size={16}
+                    color={CATEGORY_COLORS[place.category].text}
+                  />
                 </View>
                 {visitCount > 0 && (
                   <View style={styles.visitBadge}>
@@ -156,7 +130,13 @@ export default function MapScreen() {
         })}
       </MapView>
 
-      {/* การ์ดสถานที่แบบเลื่อนแนวนอน */}
+      <TouchableOpacity
+        style={[styles.overviewButton, { top: insets.top + 10 }]}
+        onPress={showFullRoute}
+      >
+        <Text style={styles.overviewButtonText}>ภาพรวมเส้นทาง</Text>
+      </TouchableOpacity>
+
       <View style={styles.cardsWrapper}>
         <ScrollView
           horizontal
@@ -176,10 +156,14 @@ export default function MapScreen() {
                   <View
                     style={[
                       styles.cardDot,
-                      { backgroundColor: CATEGORY_COLORS[place.category] },
+                      { backgroundColor: CATEGORY_COLORS[place.category].fill },
                     ]}
                   >
-                    <Text style={styles.cardDotText}>{place.order}</Text>
+                    <MaterialCommunityIcons
+                      name={CATEGORY_COLORS[place.category].icon as any}
+                      size={13}
+                      color={CATEGORY_COLORS[place.category].text}
+                    />
                   </View>
                   {visitCount > 0 && (
                     <View style={styles.cardVisitTag}>
@@ -282,7 +266,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -6,
     right: -10,
-    backgroundColor: "#D7263D",
+    backgroundColor: "CLORS.routeRed",
     borderRadius: 9,
     minWidth: 18,
     height: 18,
@@ -357,5 +341,24 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     color: "#8A8378",
     marginTop: 3,
+  },
+  overviewButton: {
+    position: "absolute",
+    right: 14,
+    backgroundColor: "#2FBB15",
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 5,
+    zIndex: 10,
+  },
+  overviewButtonText: {
+    color: "#FFFBF3",
+    fontSize: 12.5,
+    fontWeight: "700",
   },
 });

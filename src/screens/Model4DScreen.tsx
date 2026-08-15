@@ -11,6 +11,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { COLORS } from "../theme/colors";
 import { TOTAL_ROUTE_DISTANCE_KM, LANDMARKS } from "../data/landmarks";
 import { useNavigation } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const PILLARS = [
   {
@@ -59,62 +60,64 @@ export default function Model4DScreen() {
   const navigation = useNavigation<any>();
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.headerSubtitle}>โมเดลการพัฒนา</Text>
-        <Text style={styles.headerTitle}>Information ชุมชนคลองโยง</Text>
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Information ชุมชนคลองโยง</Text>
+        </View>
 
-      <View style={styles.pillarGrid}>
-        {PILLARS.map((pillar) => (
-          <View key={pillar.id} style={styles.pillarCard}>
-            <View style={[styles.pillarIcon, { backgroundColor: pillar.fill }]}>
-              <MaterialCommunityIcons
-                name={pillar.icon as any}
-                size={24}
-                color={pillar.text}
-              />
+        <View style={styles.pillarGrid}>
+          {PILLARS.map((pillar) => (
+            <View key={pillar.id} style={styles.pillarCard}>
+              <View style={[styles.pillarIcon, { backgroundColor: pillar.fill }]}>
+                <MaterialCommunityIcons
+                  name={pillar.icon as any}
+                  size={24}
+                  color={pillar.text}
+                />
+              </View>
+              <Text style={styles.pillarTitle}>{pillar.title}</Text>
+              <Text style={styles.pillarSubtitle}>{pillar.subtitle}</Text>
+              <Text style={styles.pillarDescription}>{pillar.description}</Text>
             </View>
-            <Text style={styles.pillarTitle}>{pillar.title}</Text>
-            <Text style={styles.pillarSubtitle}>{pillar.subtitle}</Text>
-            <Text style={styles.pillarDescription}>{pillar.description}</Text>
-          </View>
-        ))}
-      </View>
-
-      <TouchableOpacity
-        style={styles.routeSummaryCard}
-        onPress={() => navigation.navigate("แผนที่")}
-      >
-        <View style={styles.routeSummaryHeader}>
-          <MaterialCommunityIcons name="map-marker-path" size={20} color="#fff" />
-          <Text style={styles.routeSummaryTitle}>เส้นทางท่องเที่ยวเชื่อมโยง</Text>
+          ))}
         </View>
-        <Text style={styles.routeSummaryText}>
-          พุทธมณฑล → ตลาดน้ำลำพญา · {TOTAL_ROUTE_DISTANCE_KM} กม. ·{" "}
-          {LANDMARKS.length} จุดหมาย
-        </Text>
-        <View style={styles.routeSummaryLink}>
-          <Text style={styles.routeSummaryLinkText}>ดูแผนที่เส้นทาง</Text>
-          <MaterialCommunityIcons name="arrow-right" size={14} color="#fff" />
-        </View>
-      </TouchableOpacity>
 
-      <View style={styles.contactCard}>
-        <Text style={styles.contactTitle}>ติดต่อองค์การบริหารส่วนตำบล</Text>
         <TouchableOpacity
-          style={styles.contactRow}
-          onPress={() => Linking.openURL("tel:034989676")}
+          style={styles.routeSummaryCard}
+          onPress={() => navigation.navigate("แผนที่")}
         >
-          <MaterialCommunityIcons name="phone" size={18} color={COLORS.routeRed} />
-          <Text style={styles.contactText}>034-989676</Text>
+          <View style={styles.routeSummaryHeader}>
+            <MaterialCommunityIcons name="map-marker-path" size={20} color="#fff" />
+            <Text style={styles.routeSummaryTitle}>เส้นทางท่องเที่ยวเชื่อมโยง</Text>
+          </View>
+          <Text style={styles.routeSummaryText}>
+            พุทธมณฑล → ตลาดน้ำลำพญา · {TOTAL_ROUTE_DISTANCE_KM} กม. ·{" "}
+            {LANDMARKS.length} จุดหมาย
+          </Text>
+          <View style={styles.routeSummaryLink}>
+            <Text style={styles.routeSummaryLinkText}>ดูแผนที่เส้นทาง</Text>
+            <MaterialCommunityIcons name="arrow-right" size={14} color="#fff" />
+          </View>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+
+        <View style={styles.contactCard}>
+          <Text style={styles.contactTitle}>ติดต่อองค์การบริหารส่วนตำบล</Text>
+          <TouchableOpacity
+            style={styles.contactRow}
+            onPress={() => Linking.openURL("tel:034989676")}
+          >
+            <MaterialCommunityIcons name="phone" size={18} color={COLORS.routeRed} />
+            <Text style={styles.contactText}>034-989676</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: COLORS.routeRed },
   container: { flex: 1, backgroundColor: COLORS.background },
   content: { paddingBottom: 32 },
   header: {

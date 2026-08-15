@@ -99,7 +99,7 @@ export default function PlaceDetailModal({
 
               {place.tips && place.tips.length > 0 && (
                 <View style={styles.tipsBox}>
-                  <Text style={styles.tipsHeader}>💡 เคล็ดลับการเที่ยว</Text>
+                  <Text style={styles.tipsHeader}>เคล็ดลับการเที่ยว</Text>
                   {place.tips.map((tip, idx) => (
                     <Text key={idx} style={styles.tipItem}>
                       • {tip}
@@ -109,10 +109,10 @@ export default function PlaceDetailModal({
               )}
 
               {place.openHours && (
-                <Text style={styles.metaLine}>🕒 {place.openHours}</Text>
+                <Text style={styles.metaLine}>{place.openHours}</Text>
               )}
               {place.phone && (
-                <Text style={styles.metaLine}>📞 {place.phone}</Text>
+                <Text style={styles.metaLine}>{place.phone}</Text>
               )}
             </ScrollView>
 

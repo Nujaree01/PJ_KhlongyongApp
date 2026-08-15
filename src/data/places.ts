@@ -26,7 +26,7 @@ export interface Place {
     phone?: string;
 }
 
-export const ROUTE_TITLE = "เส้นทางท่องเที่ยวเชื่อมโยงชุมชนคลองโยง";
+export const ROUTE_TITLE = "เส้นทางท่องเที่ยวชุมชนคลองโยง";
 export const ROUTE_TOTAL_DISTANCE_KM = 29;
 
 export const PLACES: Place[] = [

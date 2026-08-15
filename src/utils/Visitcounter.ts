@@ -1,6 +1,3 @@
-// utils/visitCounter.ts
-// ระบบนับจำนวนครั้งที่ผู้ใช้เปิดดูรายละเอียดแต่ละสถานที่ เก็บถาวรในเครื่องด้วย AsyncStorage
-
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useState } from "react";
 
@@ -8,7 +5,6 @@ const STORAGE_KEY = "@khlongyong_visit_counts";
 
 export type VisitCounts = Record<string, number>;
 
-/** อ่านข้อมูลตัวนับทั้งหมดจาก AsyncStorage */
 export async function loadVisitCounts(): Promise<VisitCounts> {
     try {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -19,7 +15,6 @@ export async function loadVisitCounts(): Promise<VisitCounts> {
     }
 }
 
-/** บันทึกข้อมูลตัวนับทั้งหมดกลับลง AsyncStorage */
 async function saveVisitCounts(counts: VisitCounts): Promise<void> {
     try {
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(counts));
@@ -28,7 +23,6 @@ async function saveVisitCounts(counts: VisitCounts): Promise<void> {
     }
 }
 
-/** เพิ่มตัวนับของสถานที่ 1 จุด แล้วคืนค่าตัวนับใหม่ทั้งหมด */
 export async function incrementVisitCount(
     placeId: string
 ): Promise<VisitCounts> {
@@ -41,16 +35,12 @@ export async function incrementVisitCount(
     return updated;
 }
 
-/** ล้างข้อมูลตัวนับทั้งหมด (ใช้สำหรับปุ่ม "รีเซ็ตสถิติ") */
 export async function resetVisitCounts(): Promise<VisitCounts> {
     await AsyncStorage.removeItem(STORAGE_KEY);
     return {};
 }
 
-/**
- * Hook สำหรับใช้ในหน้าจอ: โหลดตัวนับตอน mount
- * และมีฟังก์ชัน recordVisit(placeId) ให้เรียกเมื่อผู้ใช้เปิดดูสถานที่
- */
+
 export function useVisitCounts() {
     const [counts, setCounts] = useState<VisitCounts>({});
     const [loaded, setLoaded] = useState(false);

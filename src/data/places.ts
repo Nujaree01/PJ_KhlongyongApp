@@ -19,7 +19,7 @@ export interface Place {
     longitude: number;
     description: string;
     highlight: string;
-    image?: string;
+    image?: any;
     distanceFromPrevKm?: number;
     tips?: string[];
     openHours?: string;
@@ -38,6 +38,7 @@ export const PLACES: Place[] = [
         category: "start",
         latitude: 13.7768069,
         longitude: 100.3210139,
+        image: require("../../assets/places/001.jpg"),
         description:
             "จุดเริ่มต้นเส้นทางท่องเที่ยว ตั้งอยู่บนถนนอุทยาน (Utthayan Road) บริเวณรอยต่อกรุงเทพฯ-นครปฐม เป็นสวนสาธารณะขนาดใหญ่ ศูนย์รวมงานพุทธศิลป์และพระพุทธรูปยืนปางลีลาองค์ใหญ่",
         highlight: "จุดเริ่มต้นเส้นทาง",
@@ -51,6 +52,7 @@ export const PLACES: Place[] = [
         category: "market",
         latitude: 13.7673,
         longitude: 100.2848,
+        image: require("../../assets/places/002.png"),
         description:
             "ตลาดริมคลองเก่าแก่ที่ยังคงวิถีชีวิตชุมชนริมน้ำ ขึ้นชื่อเรื่องอาหารพื้นบ้าน ขนมไทย และผลไม้ตามฤดูกาล เหมาะสำหรับแวะพักผ่อนและชิมอาหารก่อนเดินทางต่อ",
         highlight: "ตลาดริมคลองวิถีไทย",
@@ -64,6 +66,7 @@ export const PLACES: Place[] = [
         category: "learning",
         latitude: 13.85715,
         longitude: 100.27780,
+        image: require("../../assets/places/003.png"),
         description:
             "ศูนย์เรียนรู้เกษตรทฤษฎีใหม่ตามแนวพระราชดำริ สาธิตการบริหารจัดการพื้นที่แบบ โคก หนอง นา เปิดให้เยี่ยมชมและศึกษาดูงานด้านเกษตรพอเพียง",
         highlight: "ศูนย์เรียนรู้เกษตรพอเพียง",
@@ -77,6 +80,7 @@ export const PLACES: Place[] = [
         category: "university",
         latitude: 13.8688935,
         longitude: 100.2730046,
+        image: require("../../assets/places/004.png"),
         description:
             "วิทยาเขตของมหาวิทยาลัยราชภัฏสวนสุนันทา ตั้งอยู่ในพื้นที่ตำบลคลองโยง เป็นแหล่งเรียนรู้และจัดกิจกรรมร่วมกับชุมชนโดยรอบ",
         highlight: "สถาบันการศึกษาประจำพื้นที่",
@@ -90,6 +94,7 @@ export const PLACES: Place[] = [
         category: "temple",
         latitude: 13.8831534,
         longitude: 100.2880267,
+        image: require("../../assets/places/005.jpg"),
         description:
             "วัดเก่าแก่ประจำชุมชนคลองโยง เป็นศูนย์รวมจิตใจของคนในพื้นที่ สถาปัตยกรรมไทยดั้งเดิม เหมาะแก่การแวะสักการะพระและพักผ่อนใจ",
         highlight: "วัดศูนย์รวมใจชุมชน",
@@ -102,6 +107,7 @@ export const PLACES: Place[] = [
         category: "farm",
         latitude: 13.8852826,
         longitude: 100.2861124,
+        image: require("../../assets/places/006.jpg"),
         description:
             "ฟาร์มเกษตรท่องเที่ยวเชิงสร้างสรรค์ เปิดให้นักท่องเที่ยวเข้าชมแปลงปลูกผลไม้และผลิตภัณฑ์แปรรูปจากผลผลิตในชุมชน ถ่ายรูปสวย ๆ ได้รอบฟาร์ม",
         highlight: "ฟาร์มเกษตรท่องเที่ยว",
@@ -114,6 +120,7 @@ export const PLACES: Place[] = [
         category: "nature",
         latitude: 13.9198375,
         longitude: 100.2618041,
+        image: require("../../assets/places/007.jpg"),
         description:
             "แหล่งเพาะปลูกและจำหน่ายกล้วยไม้คุณภาพส่งออก นักท่องเที่ยวสามารถเดินชมโรงเรือนกล้วยไม้หลากสายพันธุ์ และเลือกซื้อกล้วยไม้กลับบ้านได้",
         highlight: "สวนกล้วยไม้เพื่อการส่งออก",
@@ -127,6 +134,7 @@ export const PLACES: Place[] = [
         category: "end",
         latitude: 13.958667,
         longitude: 100.203467,
+        image: require("../../assets/places/008.jpg"),
         description:
             "จุดหมายปลายทางของเส้นทาง ตลาดน้ำชื่อดังริมคลองลำพญา สัมผัสวิถีชีวิตริมน้ำ อาหารและของกินท้องถิ่นหลากหลาย เป็นจุดปิดทริปที่สมบูรณ์แบบ",
         highlight: "จุดหมายปลายทาง",

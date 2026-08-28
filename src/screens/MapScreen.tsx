@@ -1,13 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useMemo } from "react";
 import { fetchRouteCoordinates } from "../utils/Fetchroute";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, } from "react-native";
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  Image,
+} from "react-native";
+import MapView, { Marker, Polyline, Callout, PROVIDER_GOOGLE } from "react-native-maps";
 import { PLACES, Place, ROUTE_COORDINATES, ROUTE_TITLE, ROUTE_TOTAL_DISTANCE_KM, } from "../data/places";
-import PlaceDetailModal from "../components/PlaceDetailModal";
 import { useVisitCounts } from "../utils/Visitcounter";
+import { computeMarkerOffsets, resolveMarkerOverlaps } from "../utils/RouteGeometry";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { COLORS, CATEGORY_COLORS } from "../theme/colors";
+import { useNavigation } from "@react-navigation/native";
 
 const INITIAL_REGION = {
   latitude: 13.83,
@@ -17,14 +26,14 @@ const INITIAL_REGION = {
 };
 
 export default function MapScreen() {
-  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
   const mapRef = useRef<MapView>(null);
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<any>();
 
   const { counts, recordVisit } = useVisitCounts();
 
   const [roadRoute, setRoadRoute] = useState(ROUTE_COORDINATES);
+  const [currentZoomDelta, setCurrentZoomDelta] = useState(INITIAL_REGION.latitudeDelta);
   const [routeInfo, setRouteInfo] = useState<{
     distanceKm: number;
     durationMin: number;
@@ -32,7 +41,10 @@ export default function MapScreen() {
 
   useEffect(() => {
     let isMounted = true;
-    fetchRouteCoordinates(ROUTE_COORDINATES).then((result) => {
+    const origin = ROUTE_COORDINATES[0];
+    const destination = ROUTE_COORDINATES[ROUTE_COORDINATES.length - 1];
+
+    fetchRouteCoordinates([origin, destination]).then((result) => {
       if (!isMounted) return;
       setRoadRoute(result.coordinates);
       if (!result.isFallback) {
@@ -47,11 +59,21 @@ export default function MapScreen() {
     };
   }, []);
 
-  const openPlace = (place: Place) => {
-    setSelectedPlace(place);
-    setModalVisible(true);
-    recordVisit(place.id);
+  const markerOffsets = useMemo(
+    () => {
+      const base = computeMarkerOffsets(PLACES, roadRoute, 1);
+      const resolved = resolveMarkerOverlaps(base, 130);
+      return resolved;
+    },
+    [roadRoute]
+  );
+  const offsetById = useMemo(() => {
+    const map: Record<string, { trueCoordinate: any; displayCoordinate: any }> = {};
+    markerOffsets.forEach((o) => (map[o.id] = o));
+    return map;
+  }, [markerOffsets]);
 
+  const focusPlace = (place: Place) => {
     mapRef.current?.animateToRegion(
       {
         latitude: place.latitude,
@@ -62,14 +84,18 @@ export default function MapScreen() {
       450
     );
   };
+
+  const openPlaceDetail = (place: Place) => {
+    recordVisit(place.id);
+    navigation.navigate("PlaceDetail", { placeId: place.id });
+  };
+
   const showFullRoute = () => {
     mapRef.current?.fitToCoordinates(ROUTE_COORDINATES, {
       edgePadding: { top: 60, right: 40, bottom: 180, left: 40 },
       animated: true,
     });
   };
-
-  const closeModal = () => setModalVisible(false);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -89,22 +115,58 @@ export default function MapScreen() {
         style={styles.map}
         provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
         initialRegion={INITIAL_REGION}
+        toolbarEnabled={false}
+        onRegionChangeComplete={(region) => setCurrentZoomDelta(region.latitudeDelta)}
       >
+        {markerOffsets.map((o) => (
+          <Polyline
+            key={`connector-${o.id}`}
+            coordinates={[o.trueCoordinate, o.displayCoordinate]}
+            strokeColor="#8A8378"
+            strokeWidth={1.5}
+            lineDashPattern={[5, 4]}
+          />
+        ))}
+
         <Polyline
           coordinates={roadRoute}
           strokeColor="#D7263D"
           strokeWidth={4}
         />
 
+        {PLACES.map((place) => (
+          <Marker
+            key={`true-${place.id}`}
+            coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+            anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={false}
+          >
+            <View style={styles.trueDot} />
+          </Marker>
+        ))}
+
         {PLACES.map((place) => {
           const visitCount = counts[place.id] ?? 0;
+          const offset = offsetById[place.id];
+          const displayCoordinate = offset ? offset.displayCoordinate : { latitude: place.latitude, longitude: place.longitude };
           return (
             <Marker
               key={place.id}
-              coordinate={{ latitude: place.latitude, longitude: place.longitude }}
-              onPress={() => openPlace(place)}
+              coordinate={displayCoordinate}
+              onPress={() => focusPlace(place)}
+              onCalloutPress={() => openPlaceDetail(place)}
+              tracksViewChanges={true}
+              anchor={{ x: 0.5, y: 1 }}
+              calloutAnchor={{ x: 0.5, y: -0.15 }}
             >
               <View style={styles.markerWrapper}>
+                {currentZoomDelta < 0.04 && (
+                  <View style={styles.markerLabelBubble}>
+                    <Text style={styles.markerLabelText}>
+                      {place.name}
+                    </Text>
+                  </View>
+                )}
                 <View
                   style={[
                     styles.markerPin,
@@ -125,6 +187,27 @@ export default function MapScreen() {
                   </View>
                 )}
               </View>
+
+              <Callout tooltip onPress={() => openPlaceDetail(place)}>
+                <View style={styles.calloutCard}>
+                  {place.image ? (
+                    <Image
+                      source={place.image}
+                      style={styles.calloutImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.calloutImagePlaceholder}>
+                      <MaterialCommunityIcons
+                        name="image-off-outline"
+                        size={22}
+                        color="#B5AFA0"
+                      />
+                    </View>
+                  )}
+                  <Text style={styles.calloutHint}>แตะเพื่อดูรายละเอียด →</Text>
+                </View>
+              </Callout>
             </Marker>
           );
         })}
@@ -136,61 +219,6 @@ export default function MapScreen() {
       >
         <Text style={styles.overviewButtonText}>ภาพรวมเส้นทาง</Text>
       </TouchableOpacity>
-
-      <View style={styles.cardsWrapper}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.cardsRow}
-        >
-          {PLACES.map((place) => {
-            const visitCount = counts[place.id] ?? 0;
-            return (
-              <TouchableOpacity
-                key={place.id}
-                style={styles.card}
-                onPress={() => openPlace(place)}
-                activeOpacity={0.85}
-              >
-                <View style={styles.cardTopRow}>
-                  <View
-                    style={[
-                      styles.cardDot,
-                      { backgroundColor: CATEGORY_COLORS[place.category].fill },
-                    ]}
-                  >
-                    <MaterialCommunityIcons
-                      name={CATEGORY_COLORS[place.category].icon as any}
-                      size={13}
-                      color={CATEGORY_COLORS[place.category].text}
-                    />
-                  </View>
-                  {visitCount > 0 && (
-                    <View style={styles.cardVisitTag}>
-                      <Text style={styles.cardVisitTagText}>
-                        👁 {visitCount}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.cardTitle} numberOfLines={2}>
-                  {place.name}
-                </Text>
-                <Text style={styles.cardSubtitle} numberOfLines={1}>
-                  {place.highlight}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      <PlaceDetailModal
-        place={selectedPlace}
-        visible={modalVisible}
-        onClose={closeModal}
-        visitCount={selectedPlace ? counts[selectedPlace.id] ?? 0 : 0}
-      />
     </SafeAreaView>
   );
 }
@@ -262,11 +290,19 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     fontSize: 13,
   },
+  trueDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#2D2A26",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
   visitBadge: {
     position: "absolute",
     top: -6,
     right: -10,
-    backgroundColor: "CLORS.routeRed",
+    backgroundColor: COLORS.routeRed,
     borderRadius: 9,
     minWidth: 18,
     height: 18,
@@ -280,67 +316,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 9,
     fontWeight: "800",
-  },
-  cardsWrapper: {
-    position: "absolute",
-    bottom: 16,
-    left: 0,
-    right: 0,
-  },
-  cardsRow: {
-    paddingHorizontal: 14,
-    gap: 10,
-  },
-  card: {
-    width: 150,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 12,
-    marginRight: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 5,
-  },
-  cardTopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  cardDot: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardDotText: {
-    color: "#FFFFFF",
-    fontWeight: "800",
-    fontSize: 12,
-  },
-  cardVisitTag: {
-    backgroundColor: "#F3ECDB",
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  cardVisitTagText: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: "#6B5A2E",
-  },
-  cardTitle: {
-    fontSize: 13.5,
-    fontWeight: "700",
-    color: "#2D2A26",
-  },
-  cardSubtitle: {
-    fontSize: 11.5,
-    color: "#8A8378",
-    marginTop: 3,
   },
   overviewButton: {
     position: "absolute",
@@ -360,5 +335,62 @@ const styles = StyleSheet.create({
     color: "#FFFBF3",
     fontSize: 12.5,
     fontWeight: "700",
+  },
+  markerLabelBubble: {
+    backgroundColor: "rgba(255,255,255,0.95)",
+    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    marginBottom: 3,
+    maxWidth: 160,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 3,
+  },
+  markerLabelText: {
+    fontSize: 10.5,
+    fontWeight: "700",
+    color: "#2D2A26",
+    textAlign: "center",
+  },
+  calloutCard: {
+    width: 160,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 6,
+  },
+  calloutImage: {
+    width: "100%",
+    height: 90,
+    borderRadius: 10,
+    marginBottom: 8,
+    backgroundColor: "#F3ECDB",
+  },
+  calloutImagePlaceholder: {
+    width: "100%",
+    height: 90,
+    borderRadius: 10,
+    marginBottom: 8,
+    backgroundColor: "#F3ECDB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  calloutTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#2D2A26",
+  },
+  calloutHint: {
+    fontSize: 10.5,
+    color: "#8A8378",
+    marginTop: 2,
+    textAlign: "center",
   },
 });

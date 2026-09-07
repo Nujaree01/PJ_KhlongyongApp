@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import MapView, { Marker, Polyline, Callout, PROVIDER_GOOGLE } from "react-native-maps";
 import { PLACES, Place, ROUTE_COORDINATES, ROUTE_TITLE, ROUTE_TOTAL_DISTANCE_KM, } from "../data/places";
+import { useLivePlaces } from "../hooks/useLivePlaces";
 import { useVisitCounts } from "../utils/Visitcounter";
 import { computeMarkerOffsets, resolveMarkerOverlaps } from "../utils/RouteGeometry";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -29,6 +30,7 @@ export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
+  const { places: PLACES } = useLivePlaces();
 
   const { counts, recordVisit } = useVisitCounts();
 

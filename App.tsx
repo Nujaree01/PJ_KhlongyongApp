@@ -7,7 +7,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import MapScreen from "./src/screens/MapScreen";
 import Model4DScreen from "./src/screens/Model4DScreen";
-import AdminScreen from "./src/screens/AdminScreen";
+import AdminStack from "./src/navigation/AdminStack";
 import PlaceDetailScreen from "./src/screens/PlaceDetailScreen";
 import SplashScreen from "./src/screens/SplashScreen";
 import { COLORS } from "./src/theme/colors";
@@ -41,7 +41,7 @@ function Tabs() {
       })}
     >
       <Tab.Screen name="แผนที่" component={MapScreen} />
-      <Tab.Screen name="แอดมิน" component={AdminScreen} />
+      <Tab.Screen name="แอดมิน" component={AdminStack} />
       <Tab.Screen name="Info" component={Model4DScreen} />
     </Tab.Navigator>
   );

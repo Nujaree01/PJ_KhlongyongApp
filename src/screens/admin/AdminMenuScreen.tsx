@@ -85,7 +85,7 @@ export default function AdminMenuScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: COLORS.routeRed },
+  safeArea: { flex: 1, backgroundColor: COLORS.background },
   header: {
     backgroundColor: COLORS.routeRed,
     paddingTop: 14,

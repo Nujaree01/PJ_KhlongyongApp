@@ -28,7 +28,7 @@ export default function AdminScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: COLORS.routeRed,
+        backgroundColor: COLORS.background,
     },
     header: {
         backgroundColor: COLORS.routeRed,

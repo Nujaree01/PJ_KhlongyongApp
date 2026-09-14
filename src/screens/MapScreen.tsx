@@ -7,12 +7,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
-  Image,
 } from "react-native";
 import MapView, { Marker, Polyline, Callout, PROVIDER_GOOGLE } from "react-native-maps";
 import { PLACES, Place, ROUTE_COORDINATES, ROUTE_TITLE, ROUTE_TOTAL_DISTANCE_KM, } from "../data/places";
 import { useLivePlaces } from "../hooks/useLivePlaces";
-import { useVisitCounts } from "../utils/Visitcounter";
+import { useVisitStats } from "../hooks/useVisitStats";
 import { computeMarkerOffsets, resolveMarkerOverlaps } from "../utils/RouteGeometry";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -32,7 +31,7 @@ export default function MapScreen() {
   const navigation = useNavigation<any>();
   const { places: PLACES } = useLivePlaces();
 
-  const { counts, recordVisit } = useVisitCounts();
+  const { counts, recordVisit } = useVisitStats();
 
   const [roadRoute, setRoadRoute] = useState(ROUTE_COORDINATES);
   const [currentZoomDelta, setCurrentZoomDelta] = useState(INITIAL_REGION.latitudeDelta);
@@ -192,21 +191,6 @@ export default function MapScreen() {
 
               <Callout tooltip onPress={() => openPlaceDetail(place)}>
                 <View style={styles.calloutCard}>
-                  {place.image ? (
-                    <Image
-                      source={place.image}
-                      style={styles.calloutImage}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View style={styles.calloutImagePlaceholder}>
-                      <MaterialCommunityIcons
-                        name="image-off-outline"
-                        size={22}
-                        color="#B5AFA0"
-                      />
-                    </View>
-                  )}
                   <Text style={styles.calloutHint}>แตะเพื่อดูรายละเอียด →</Text>
                 </View>
               </Callout>
@@ -358,31 +342,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   calloutCard: {
-    width: 160,
+    minWidth: 120,
+    maxWidth: 160,
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     shadowColor: "#000",
     shadowOpacity: 0.2,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
     elevation: 6,
-  },
-  calloutImage: {
-    width: "100%",
-    height: 90,
-    borderRadius: 10,
-    marginBottom: 8,
-    backgroundColor: "#F3ECDB",
-  },
-  calloutImagePlaceholder: {
-    width: "100%",
-    height: 90,
-    borderRadius: 10,
-    marginBottom: 8,
-    backgroundColor: "#F3ECDB",
-    alignItems: "center",
-    justifyContent: "center",
   },
   calloutTitle: {
     fontSize: 13,
@@ -392,7 +362,6 @@ const styles = StyleSheet.create({
   calloutHint: {
     fontSize: 10.5,
     color: "#8A8378",
-    marginTop: 2,
     textAlign: "center",
   },
 });

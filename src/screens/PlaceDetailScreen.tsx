@@ -13,6 +13,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { useLivePlaces } from "../hooks/useLivePlaces";
+import { useVisitStats } from "../hooks/useVisitStats";
 import { COLORS, CATEGORY_COLORS, CATEGORY_LABELS } from "../theme/colors";
 
 type ParamList = {
@@ -27,6 +28,8 @@ export default function PlaceDetailScreen() {
 
     const { places } = useLivePlaces();
     const place = places.find((p) => p.id === placeId);
+    const { counts } = useVisitStats();
+    const visitCount = place ? counts[place.id] ?? 0 : 0;
 
     if (!place) {
         return (
@@ -67,7 +70,12 @@ export default function PlaceDetailScreen() {
                         <Text style={styles.title}>{place.name}</Text>
                         {place.nameEn ? <Text style={styles.subtitle}>{place.nameEn}</Text> : null}
                         {place.highlight ? <Text style={styles.tagline}>{place.highlight}</Text> : null}
-
+                        {visitCount > 0 && (
+                            <View style={styles.visitCountRow}>
+                                <MaterialCommunityIcons name="eye-outline" size={13} color={COLORS.textSecondary} />
+                                <Text style={styles.visitCountText}>เข้าชมแล้ว {visitCount} ครั้ง</Text>
+                            </View>
+                        )}
                         {(place.openHours || place.phone) && (
                             <View style={styles.quickFactsRow}>
                                 {place.openHours && (
@@ -250,6 +258,16 @@ const styles = StyleSheet.create({
         marginTop: 12,
         lineHeight: 22,
         fontWeight: "500",
+    },
+    visitCountRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+        marginTop: 8,
+    },
+    visitCountText: {
+        fontSize: 12,
+        color: COLORS.textSecondary,
     },
     quickFactsRow: {
         flexDirection: "row",

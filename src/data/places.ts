@@ -91,7 +91,7 @@ export const PLACES: Place[] = [
             "วิทยาเขตของมหาวิทยาลัยราชภัฏสวนสุนันทา ตั้งอยู่ในพื้นที่ตำบลคลองโยง เป็นแหล่งเรียนรู้และจัดกิจกรรมร่วมกับชุมชนโดยรอบ",
         highlight: "สถาบันการศึกษาประจำพื้นที่",
     },
-    
+
     {
         id: "watmakluea",
         order: 5,
@@ -139,8 +139,23 @@ export const PLACES: Place[] = [
         tips: ["ควรสวมรองเท้าที่เดินสบาย พื้นโรงเรือนอาจชื้น"],
     },
     {
+        id: "watmongkol",  
+        order: 8,           
+        name: "วัดมงคลประชาราม",
+        nameEn: "Wat Mongkol Pracharam",    
+        category: "temple",              
+        latitude: 13.843086,
+        longitude: 100.305455,
+        description: "วัดราษฎร์สังกัดมหานิกาย ตั้งอยู่หมู่ 6 ตำบลคลองโยง ก่อตั้งเมื่อปี พ.ศ. 2519 เป็นที่ประดิษฐานหลวงพ่อดำ พระพุทธรูปสำคัญที่ชาวบ้านเคารพศรัทธา บรรยากาศร่มรื่นริมคลองทวีวัฒนา เป็นศูนย์รวมจิตใจของชุมชนคลองโยงมาอย่างยาวนาน",
+        highlight: "วัดเก่าแก่ริมคลองทวีวัฒนา",
+        tips: ["เหมาะแวะสักการะหลวงพ่อดำและพักผ่อนใจระหว่างทาง"],
+        openHours: "08:00 - 17:00",      
+        phone: "0842679299 ",                
+        image: require("../assets/places/009.jpg"),
+    },
+    {
         id: "watlamphaya",
-        order: 8,
+        order: 9,
         name: "ตลาดน้ำวัดลำพญา",
         nameEn: "Wat Lam Phaya Floating Market",
         category: "end",
@@ -153,6 +168,7 @@ export const PLACES: Place[] = [
         highlight: "อาหารพื้นบ้านริมน้ำ",
         tips: ["แนะนำมาช่วงเช้าวันหยุด ตลาดจะคึกคักและมีร้านค้าครบที่สุด"],
     },
+    
 ];
 
 
@@ -180,7 +196,6 @@ export const CATEGORY_LABELS: Record<PlaceCategory, string> = {
     rest: "จุดพักผ่อน",
 };
 
-// เส้นทาง (waypoints) สำหรับวาด Polyline บนแผนที่ เรียงตามลำดับ order
 export const ROUTE_COORDINATES = PLACES.map((p) => ({
     latitude: p.latitude,
     longitude: p.longitude,

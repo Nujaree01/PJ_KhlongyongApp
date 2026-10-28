@@ -1,8 +1,3 @@
-// services/placesRemote.ts
-// อ่าน/เขียนข้อมูล "ส่วนที่แก้ไขได้" ของแต่ละสถานที่ ผ่าน Firestore
-// collection: "places", document id = place.id (เช่น "phutthamonthon")
-// เก็บเฉพาะ field ที่แอดมินแก้ไขได้ ไม่เก็บพิกัด/ลำดับ (ยังคุมจาก data/places.ts เหมือนเดิม)
-
 import {
   collection,
   doc,
@@ -11,6 +6,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "./firebase";
+import { PlaceCategory } from "../data/places";
 
 export interface PlaceOverride {
   name?: string;
@@ -20,17 +16,18 @@ export interface PlaceOverride {
   tips?: string[];
   openHours?: string;
   phone?: string;
-  imageUrl?: string; // รูปจาก URL (แทนที่ require() local เมื่อแอดมินอัปเดต)
+  imageUrl?: string;
+  updatedAt?: { toMillis: () => number };
+  order?: number, 
+  category?: PlaceCategory, 
+  latitude?: number, 
+  longitude?: number
 }
 
 export type PlaceOverridesMap = Record<string, PlaceOverride>;
 
 const COLLECTION_NAME = "places";
 
-/**
- * ฟัง Firestore แบบ real-time — เรียก callback ทุกครั้งที่มีการแก้ไขข้อมูลจากที่ไหนก็ตาม
- * คืนค่า unsubscribe function สำหรับเลิกฟังตอน component unmount
- */
 export function subscribeToPlaceOverrides(
   onUpdate: (overrides: PlaceOverridesMap) => void,
   onError?: (error: unknown) => void
@@ -55,7 +52,6 @@ export function subscribeToPlaceOverrides(
   return unsubscribe;
 }
 
-/** บันทึกการแก้ไขของสถานที่ 1 จุด ขึ้น Firestore */
 export async function savePlaceOverride(
   placeId: string,
   data: PlaceOverride

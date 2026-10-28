@@ -6,203 +6,329 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Image,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../theme/colors";
 import { TOTAL_ROUTE_DISTANCE_KM, LANDMARKS } from "../data/landmarks";
-import { useNavigation } from "@react-navigation/native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const PILLARS = [
   {
     id: "nature",
-    title: "การท่องเที่ยวเชิงธรรมชาติ",
+    title: "ท่องเที่ยว\nธรรมชาติ",
     subtitle: "Natural Tourism",
     icon: "leaf",
-    fill: "#97C459",
+    fill: "#EAF5DD",
     text: "#27500A",
-    description:
-      "ส่งเสริมการท่องเที่ยวเชิงนิเวศริมคลองโยง สวนเกษตร และพื้นที่สีเขียวตลอดเส้นทาง",
   },
   {
     id: "product",
-    title: "ผลิตภัณฑ์ชุมชน",
+    title: "ผลิตภัณฑ์\nชุมชน",
     subtitle: "Community Products",
     icon: "basket",
-    fill: "#FAC775",
+    fill: "#FDF1DC",
     text: "#633806",
-    description:
-      "สนับสนุนสินค้าเกษตรและงานฝีมือจากชุมชน ให้นักท่องเที่ยวได้เลือกซื้อระหว่างเส้นทาง",
   },
   {
     id: "leisure",
-    title: "แหล่งพักผ่อนสมัยใหม่",
+    title: "พักผ่อน\nสมัยใหม่",
     subtitle: "Modern Leisure",
     icon: "coffee",
-    fill: "#85B7EB",
+    fill: "#E4EFFB",
     text: "#0C447C",
-    description:
-      "จุดพักผ่อน ร้านกาแฟ และพื้นที่นันทนาการที่รองรับนักท่องเที่ยวยุคใหม่",
   },
   {
     id: "culture",
-    title: "มรดกทางวัฒนธรรม",
+    title: "มรดก\nวัฒนธรรม",
     subtitle: "Cultural Heritage",
     icon: "church",
-    fill: "#F0997B",
+    fill: "#FBEAE3",
     text: "#4A1B0C",
-    description:
-      "อนุรักษ์วัด ตลาดน้ำ และวิถีชีวิตดั้งเดิมของชุมชนคลองโยงให้คงอยู่คู่การท่องเที่ยว",
   },
 ];
 
+const USER_HELP_ITEMS = [
+  { icon: "magnify", text: "พิมพ์ค้นหาชื่อสถานที่ในช่องค้นหา" },
+  { icon: "map-marker", text: "แตะหมุดเพื่อดูรายละเอียดสถานที่" },
+  { icon: "crop-free", text: 'กด "ภาพรวม" ดูทั้งเส้นทางในครั้งเดียว' },
+];
+
 export default function Model4DScreen() {
-  const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Information ชุมชนคลองโยง</Text>
-        </View>
-
-        <View style={styles.pillarGrid}>
-          {PILLARS.map((pillar) => (
-            <View key={pillar.id} style={styles.pillarCard}>
-              <View style={[styles.pillarIcon, { backgroundColor: pillar.fill }]}>
-                <MaterialCommunityIcons
-                  name={pillar.icon as any}
-                  size={24}
-                  color={pillar.text}
-                />
-              </View>
-              <Text style={styles.pillarTitle}>{pillar.title}</Text>
-              <Text style={styles.pillarSubtitle}>{pillar.subtitle}</Text>
-              <Text style={styles.pillarDescription}>{pillar.description}</Text>
-            </View>
-          ))}
-        </View>
-
-        <TouchableOpacity
-          style={styles.routeSummaryCard}
-          onPress={() => navigation.navigate("แผนที่")}
+    <View style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <LinearGradient
+          colors={["#35C71A", "#1B7A0B"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.hero, { paddingTop: insets.top + 20 }]}
         >
-          <View style={styles.routeSummaryHeader}>
-            <MaterialCommunityIcons name="map-marker-path" size={20} color="#fff" />
-            <Text style={styles.routeSummaryTitle}>เส้นทางท่องเที่ยวเชื่อมโยง</Text>
+          <View style={styles.brandRow}>
+            <View style={styles.logoCircle}>
+              <Image
+                source={require("../assets/logo.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
+            <View>
+              <Text style={styles.brandName}>เที่ยวคลองโยง</Text>
+              <Text style={styles.brandNameEn}>Khlong Yong Trail</Text>
+            </View>
           </View>
-          <Text style={styles.routeSummaryText}>
-            พุทธมณฑล → ตลาดน้ำลำพญา · {TOTAL_ROUTE_DISTANCE_KM} กม. ·{" "}
-            {LANDMARKS.length} จุดหมาย
-          </Text>
-          <View style={styles.routeSummaryLink}>
-            <Text style={styles.routeSummaryLinkText}>ดูแผนที่เส้นทาง</Text>
-            <MaterialCommunityIcons name="arrow-right" size={14} color="#fff" />
-          </View>
-        </TouchableOpacity>
+          <Text style={styles.heroTitle}>ข้อมูลชุมชนคลองโยง</Text>
+        </LinearGradient>
 
-        <View style={styles.contactCard}>
-          <Text style={styles.contactTitle}>ติดต่อองค์การบริหารส่วนตำบล</Text>
+        <View style={styles.body}>
+          <View style={styles.pillarGrid}>
+            {PILLARS.map((pillar) => (
+              <View key={pillar.id} style={styles.pillarCard}>
+                <View style={[styles.pillarIcon, { backgroundColor: pillar.fill }]}>
+                  <MaterialCommunityIcons
+                    name={pillar.icon as any}
+                    size={18}
+                    color={pillar.text}
+                  />
+                </View>
+                <Text style={styles.pillarTitle}>{pillar.title}</Text>
+                <Text style={styles.pillarSubtitle}>{pillar.subtitle}</Text>
+              </View>
+            ))}
+          </View>
+
+          <Text style={styles.sectionLabel}>วิธีใช้งานแผนที่ help</Text>
+          <View style={styles.helpCard}>
+            {USER_HELP_ITEMS.map((item, idx) => (
+              <View
+                key={idx}
+                style={[
+                  styles.helpItemRow,
+                  idx < USER_HELP_ITEMS.length - 1 && styles.helpItemDivider,
+                ]}
+              >
+                <View style={styles.helpItemIconCircle}>
+                  <MaterialCommunityIcons
+                    name={item.icon as any}
+                    size={14}
+                    color={COLORS.routeRed}
+                  />
+                </View>
+                <Text style={styles.helpItemText}>{item.text}</Text>
+              </View>
+            ))}
+          </View>
+
+          <Text style={styles.sectionLabel}>ติดต่อเรา</Text>
           <TouchableOpacity
-            style={styles.contactRow}
+            style={styles.contactCard}
             onPress={() => Linking.openURL("tel:034989676")}
+            activeOpacity={0.8}
           >
-            <MaterialCommunityIcons name="phone" size={18} color={COLORS.routeRed} />
-            <Text style={styles.contactText}>034-989676</Text>
+            <LinearGradient
+              colors={["#35C71A", "#1B7A0B"]}
+              style={styles.contactIconCircle}
+            >
+              <MaterialCommunityIcons name="phone" size={19} color="#FFFFFF" />
+            </LinearGradient>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.contactTitle}>องค์การบริหารส่วนตำบล</Text>
+              <Text style={styles.contactPhone}>034-989676</Text>
+            </View>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={20}
+              color={COLORS.textSecondary}
+            />
           </TouchableOpacity>
+
+          <View style={{ height: 24 }} />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: COLORS.routeRed },
   container: { flex: 1, backgroundColor: COLORS.background },
-  content: { paddingBottom: 32 },
-  header: {
-    backgroundColor: COLORS.routeRed,
-    paddingTop: 14,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+  hero: {
+    paddingHorizontal: 20,
+    paddingBottom: 44,
   },
-  headerSubtitle: { color: "#fff", opacity: 0.85, fontSize: 11 },
-  headerTitle: { color: "#fff", fontSize: 18, fontWeight: "700", marginTop: 2 },
+  heroSubtitle: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    marginBottom: 5,
+  },
+  heroTitle: {
+    color: "#FFFFFF",
+    fontSize: 23,
+    fontWeight: "800",
+    lineHeight: 29,
+  },
+  heroTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  heroTagText: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.9)",
+    fontWeight: "500",
+  },
+  body: {
+    paddingHorizontal: 16,
+    paddingTop: 22,
+    marginTop: -18,
+    backgroundColor: COLORS.background,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: COLORS.textPrimary,
+    marginBottom: 12,
+  },
   pillarGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    padding: 12,
     gap: 10,
+    marginBottom: 24,
   },
   pillarCard: {
-    width: "47%",
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 12,
+    width: "47.5%",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   pillarIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  pillarTitle: { fontSize: 13, fontWeight: "700", color: COLORS.textPrimary },
+  pillarTitle: {
+    fontSize: 12.5,
+    fontWeight: "700",
+    color: COLORS.textPrimary,
+    lineHeight: 17,
+  },
   pillarSubtitle: {
     fontSize: 10,
     color: COLORS.textSecondary,
-    marginTop: 1,
-    marginBottom: 6,
-  },
-  pillarDescription: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    lineHeight: 16,
-  },
-  routeSummaryCard: {
-    backgroundColor: COLORS.routeRed,
-    borderRadius: 14,
-    padding: 16,
-    marginHorizontal: 12,
     marginTop: 4,
   },
-  routeSummaryHeader: {
+  helpCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  helpItemRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 12,
+    paddingVertical: 12,
   },
-  routeSummaryTitle: { color: "#fff", fontSize: 14, fontWeight: "700" },
-  routeSummaryText: {
-    color: "#fff",
-    opacity: 0.9,
-    fontSize: 12,
-    marginTop: 6,
+  helpItemDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
-  routeSummaryLink: {
-    flexDirection: "row",
+  helpItemIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#FBEAE3",
     alignItems: "center",
-    gap: 4,
-    marginTop: 10,
+    justifyContent: "center",
   },
-  routeSummaryLinkText: { color: "#fff", fontSize: 12, fontWeight: "600" },
+  helpItemText: {
+    flex: 1,
+    fontSize: 12.5,
+    color: COLORS.textSecondary,
+    lineHeight: 19,
+  },
   contactCard: {
-    backgroundColor: COLORS.surface,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  contactIconCircle: {
+    width: 42,
+    height: 42,
     borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 12,
-    marginTop: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   contactTitle: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: "700",
     color: COLORS.textPrimary,
-    marginBottom: 10,
   },
-  contactRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  contactPhone: {
+    fontSize: 13.5,
+    fontWeight: "700",
+    color: "#1B7A0B",
+    marginTop: 2,
   },
-  contactText: { fontSize: 14, color: COLORS.textPrimary, fontWeight: "600" },
+  brandRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  gap: 12,
+  marginBottom: 18,
+},
+logoCircle: {
+  width: 52,
+  height: 52,
+  borderRadius: 26,
+  backgroundColor: "#FFFFFF",
+  alignItems: "center",
+  justifyContent: "center",
+  shadowColor: "#000",
+  shadowOpacity: 0.2,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 3 },
+  elevation: 4,
+},
+logoImage: {
+  width: 34,
+  height: 34,
+},
+brandName: {
+  color: "#FFFFFF",
+  fontSize: 15,
+  fontWeight: "800",
+},
+brandNameEn: {
+  color: "rgba(255,255,255,0.75)",
+  fontSize: 11,
+  marginTop: 2,
+},
 });

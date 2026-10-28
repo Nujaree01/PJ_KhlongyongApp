@@ -8,7 +8,7 @@ export default function AdminScreen() {
     return (
         <SafeAreaView style={styles.safeArea} edges={["top"]}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>แอดมิน</Text>
+                <Text style={styles.headerTitle}>Admin</Text>
             </View>
 
             <View style={styles.body}>
@@ -19,7 +19,6 @@ export default function AdminScreen() {
                         color={COLORS.routeRed}
                     />
                 </View>
-                <Text style={styles.placeholderTitle}>อยู่ระหว่างการพัฒนา</Text>
             </View>
         </SafeAreaView>
     );

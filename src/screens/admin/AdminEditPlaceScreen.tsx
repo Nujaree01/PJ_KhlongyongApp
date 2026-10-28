@@ -1,6 +1,3 @@
-// screens/admin/AdminEditPlaceScreen.tsx
-// ฟอร์มแก้ไขข้อมูลสถานที่ 1 จุด — บันทึกขึ้น Firestore (ทุกคนเห็นการเปลี่ยนแปลงแบบ real-time)
-
 import React, { useEffect, useState } from "react";
 import {
   View,

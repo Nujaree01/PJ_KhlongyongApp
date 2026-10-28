@@ -1,6 +1,3 @@
-// screens/admin/AdminLoginScreen.tsx
-// หน้าเข้าสู่ระบบแอดมิน — username/password เก็บในเครื่อง
-
 import React, { useState } from "react";
 import {
   View,
@@ -12,7 +9,8 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { COLORS } from "../../theme/colors";
@@ -20,6 +18,7 @@ import { login } from "../../utils/adminAuth";
 
 export default function AdminLoginScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +26,7 @@ export default function AdminLoginScreen() {
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
-      Alert.alert("กรอกไม่ครบ", "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน");
+      Alert.alert("กรอกไม่ครบ", "กรุณากรอกอีเมลและรหัสผ่าน");
       return;
     }
     setLoading(true);
@@ -37,42 +36,45 @@ export default function AdminLoginScreen() {
     if (ok) {
       navigation.replace("AdminMenu");
     } else {
-      Alert.alert("เข้าสู่ระบบไม่สำเร็จ", "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
+      Alert.alert("เข้าสู่ระบบไม่สำเร็จ", "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
     }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <LinearGradient
+        colors={["#35C71A", "#1B7A0B"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.hero, { paddingTop: insets.top + 36 }]}
       >
-        <View style={styles.container}>
-          <View style={styles.iconCircle}>
-            <MaterialCommunityIcons
-              name="shield-account"
-              size={40}
-              color={COLORS.routeRed}
-            />
-          </View>
-          <Text style={styles.title}>เข้าสู่ระบบแอดมิน</Text>
-          <Text style={styles.subtitle}>
-            สำหรับผู้ดูแลระบบเท่านั้น
-          </Text>
+        <View style={styles.heroIconCircle}>
+          <MaterialCommunityIcons name="shield-account" size={34} color="#FFFFFF" />
+        </View>
+        <Text style={styles.heroTitle}>เข้าสู่ระบบแอดมิน</Text>
+        <Text style={styles.heroSubtitle}>สำหรับผู้ดูแลระบบเท่านั้น</Text>
+      </LinearGradient>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>ชื่อผู้ใช้</Text>
+      <View style={styles.body}>
+        <View style={styles.card}>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>อีเมล</Text>
             <TextInput
               style={styles.input}
               value={username}
               onChangeText={setUsername}
-              placeholder="ชื่อผู้ใช้"
+              placeholder="admin@khlongyong.local"
+              placeholderTextColor={COLORS.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
+              keyboardType="email-address"
             />
           </View>
 
-          <View style={styles.inputGroup}>
+          <View style={styles.fieldGroup}>
             <Text style={styles.label}>รหัสผ่าน</Text>
             <View style={styles.passwordRow}>
               <TextInput
@@ -80,6 +82,7 @@ export default function AdminLoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="รหัสผ่าน"
+                placeholderTextColor={COLORS.textSecondary}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -107,42 +110,57 @@ export default function AdminLoginScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
+const cardShadow = {
+  shadowColor: "#000",
+  shadowOpacity: 0.06,
+  shadowRadius: 8,
+  shadowOffset: { width: 0, height: 2 },
+  elevation: 2,
+} as const;
+
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: COLORS.background },
-  container: {
-    flex: 1,
-    paddingHorizontal: 28,
-    justifyContent: "center",
+  container: { flex: 1, backgroundColor: COLORS.background },
+  hero: {
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 44,
   },
-  iconCircle: {
-    alignSelf: "center",
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: COLORS.surface,
+  heroIconCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: "rgba(255,255,255,0.18)",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
+    marginBottom: 14,
   },
-  title: {
-    fontSize: 19,
-    fontWeight: "800",
-    color: COLORS.textPrimary,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    textAlign: "center",
+  heroTitle: { color: "#FFFFFF", fontSize: 19, fontWeight: "800" },
+  heroSubtitle: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 12.5,
     marginTop: 4,
-    marginBottom: 28,
   },
-  inputGroup: { marginBottom: 16 },
+  body: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 22,
+    marginTop: -18,
+    backgroundColor: COLORS.background,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 18,
+    ...cardShadow,
+  },
+  fieldGroup: { marginBottom: 16 },
   label: {
     fontSize: 12.5,
     fontWeight: "700",
@@ -154,30 +172,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontSize: 15,
+    fontSize: 14,
     color: COLORS.textPrimary,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  passwordRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  eyeButton: {
-    position: "absolute",
-    right: 12,
-    padding: 4,
-  },
+  passwordRow: { flexDirection: "row", alignItems: "center" },
+  eyeButton: { position: "absolute", right: 12, padding: 4 },
   loginButton: {
-    backgroundColor: COLORS.routeRed,
+    backgroundColor: "#1B7A0B",
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 4,
   },
-  loginButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
+  loginButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
 });

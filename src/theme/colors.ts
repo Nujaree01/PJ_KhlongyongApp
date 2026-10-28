@@ -14,8 +14,8 @@ export const CATEGORY_COLORS: Record<
   LandmarkCategory,
   { fill: string; text: string; icon: string }
 > = {
-  start: { fill: "#F7C1C1", text: "#791F1F", icon: "flag" },
-  end: { fill: "#F7C1C1", text: "#791F1F", icon: "flag-checkered" },
+  start: { fill: "#F7C1C1", text: "#791F1F", icon: "pine-tree" },
+  end: { fill: "#F7C1C1", text: "#791F1F", icon: "food-outline" },
   market: { fill: "#85B7EB", text: "#0C447C", icon: "sail-boat" },
   nature: { fill: "#97C459", text: "#27500A", icon: "leaf" },
   learning: { fill: "#FAC775", text: "#633806", icon: "school" },

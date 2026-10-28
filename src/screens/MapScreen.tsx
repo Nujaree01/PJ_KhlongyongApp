@@ -7,6 +7,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
+  TextInput,
+  FlatList,
+  Image,
 } from "react-native";
 import MapView, { Marker, Polyline, Callout, PROVIDER_GOOGLE } from "react-native-maps";
 import { PLACES, Place, ROUTE_COORDINATES, ROUTE_TITLE, ROUTE_TOTAL_DISTANCE_KM, } from "../data/places";
@@ -17,6 +20,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { COLORS, CATEGORY_COLORS } from "../theme/colors";
 import { useNavigation } from "@react-navigation/native";
+import { Dimensions } from "react-native";
 
 const INITIAL_REGION = {
   latitude: 13.83,
@@ -35,6 +39,8 @@ export default function MapScreen() {
 
   const [roadRoute, setRoadRoute] = useState(ROUTE_COORDINATES);
   const [currentZoomDelta, setCurrentZoomDelta] = useState(INITIAL_REGION.latitudeDelta);
+  const [searchText, setSearchText] = useState("");
+  const [panelHeight, setPanelHeight] = useState(100);
   const [routeInfo, setRouteInfo] = useState<{
     distanceKm: number;
     durationMin: number;
@@ -74,6 +80,17 @@ export default function MapScreen() {
     return map;
   }, [markerOffsets]);
 
+  const searchResults = searchText.trim()
+    ? PLACES.filter((p) =>
+      p.name.toLowerCase().includes(searchText.trim().toLowerCase()) ||
+      (p.nameEn ?? "").toLowerCase().includes(searchText.trim().toLowerCase())
+    )
+    : [];
+  const handleSelectSearchResult = (place: Place) => {
+    setSearchText("");
+    focusPlace(place);
+  };
+
   const focusPlace = (place: Place) => {
     mapRef.current?.animateToRegion(
       {
@@ -91,24 +108,71 @@ export default function MapScreen() {
     navigation.navigate("PlaceDetail", { placeId: place.id });
   };
 
-  const showFullRoute = () => {
+  const showFullRoute = (animated: boolean = true) => {
+    const { height } = Dimensions.get("window");
     mapRef.current?.fitToCoordinates(ROUTE_COORDINATES, {
-      edgePadding: { top: 60, right: 40, bottom: 180, left: 40 },
-      animated: true,
+      edgePadding: {
+        top: Math.round(height * 0.12),
+        right: 40,
+        bottom: panelHeight + 20,
+        left: 40,
+      },
+      animated,
     });
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.headerBar}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>{ROUTE_TITLE}</Text>
-          <Text style={styles.headerSubtitle}>
-            {routeInfo
-              ? `ระยะทางจริงตามถนน ${routeInfo.distanceKm.toFixed(1)} กม. · ประมาณ ${Math.round(routeInfo.durationMin)} นาที`
-              : `ระยะทางรวมประมาณ ${ROUTE_TOTAL_DISTANCE_KM} กิโลเมตร · ${PLACES.length} จุด`}
-          </Text>
+
+
+      <View style={[styles.searchWrapper, { top: insets.top + 10 }]}>
+        <View style={styles.searchBar}>
+          <MaterialCommunityIcons name="magnify" size={18} color={COLORS.textSecondary} />
+          <TextInput
+            style={styles.searchInput}
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholder="ค้นหาสถานที่..."
+            placeholderTextColor={COLORS.textSecondary}
+          />
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchText("")}>
+              <MaterialCommunityIcons name="close-circle" size={18} color={COLORS.textSecondary} />
+            </TouchableOpacity>
+          )}
         </View>
+
+        {searchResults.length > 0 && (
+          <View style={styles.searchResultsBox}>
+            <FlatList
+              data={searchResults}
+              keyExtractor={(item) => item.id}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.searchResultRow}
+                  onPress={() => handleSelectSearchResult(item)}
+                >
+                  <View
+                    style={[
+                      styles.searchResultDot,
+                      { backgroundColor: CATEGORY_COLORS[item.category].fill },
+                    ]}
+                  >
+                    <MaterialCommunityIcons
+                      name={CATEGORY_COLORS[item.category].icon as any}
+                      size={14}
+                      color={CATEGORY_COLORS[item.category].text}
+                    />
+                  </View>
+                  <Text style={styles.searchResultText} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        )}
       </View>
 
       <MapView
@@ -118,6 +182,7 @@ export default function MapScreen() {
         initialRegion={INITIAL_REGION}
         toolbarEnabled={false}
         onRegionChangeComplete={(region) => setCurrentZoomDelta(region.latitudeDelta)}
+        onMapReady={() => showFullRoute(false)}
       >
         {markerOffsets.map((o) => (
           <Polyline
@@ -132,7 +197,7 @@ export default function MapScreen() {
         <Polyline
           coordinates={roadRoute}
           strokeColor="#D7263D"
-          strokeWidth={4}
+          strokeWidth={8}
         />
 
         {PLACES.map((place) => (
@@ -161,7 +226,7 @@ export default function MapScreen() {
               calloutAnchor={{ x: 0.5, y: -0.15 }}
             >
               <View style={styles.markerWrapper}>
-                {currentZoomDelta < 0.04 && (
+                {currentZoomDelta < 0.25 && (
                   <View style={styles.markerLabelBubble}>
                     <Text style={styles.markerLabelText}>
                       {place.name}
@@ -191,7 +256,12 @@ export default function MapScreen() {
 
               <Callout tooltip onPress={() => openPlaceDetail(place)}>
                 <View style={styles.calloutCard}>
-                  <Text style={styles.calloutHint}>แตะเพื่อดูรายละเอียด →</Text>
+                  <View style={styles.calloutHintRow}>
+                    <Text style={styles.calloutHint} numberOfLines={1}>
+                      แตะเพื่อดูรายละเอียด
+                    </Text>
+                    <MaterialCommunityIcons name="arrow-right" size={12} color="#8A8378" />
+                  </View>
                 </View>
               </Callout>
             </Marker>
@@ -199,12 +269,49 @@ export default function MapScreen() {
         })}
       </MapView>
 
-      <TouchableOpacity
-        style={[styles.overviewButton, { top: insets.top + 10 }]}
-        onPress={showFullRoute}
-      >
-        <Text style={styles.overviewButtonText}>ภาพรวมเส้นทาง</Text>
-      </TouchableOpacity>
+      <View style={styles.bottomPanel} onLayout={(e) => setPanelHeight(e.nativeEvent.layout.height)}>
+        <View style={styles.bottomPanelRow}>
+          <View style={styles.panelLogoCircle}>
+            <Image
+              source={require("../assets/logo.png")}
+              style={styles.panelLogoImage}
+              resizeMode="contain"
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.bottomPanelTitle} numberOfLines={1}>
+              {ROUTE_TITLE}
+            </Text>
+            <View style={styles.bottomPanelStatsRow}>
+              <View style={styles.statItem}>
+                <MaterialCommunityIcons name="road-variant" size={14} color={COLORS.textSecondary} />
+                <Text style={styles.statText}>
+                  {routeInfo ? `${routeInfo.distanceKm.toFixed(1)} กม.` : `${ROUTE_TOTAL_DISTANCE_KM} กม.`}
+                </Text>
+              </View>
+              {routeInfo && (
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="clock-outline" size={14} color={COLORS.textSecondary} />
+                  <Text style={styles.statText}>{Math.round(routeInfo.durationMin)} นาที</Text>
+                </View>
+              )}
+              <View style={styles.statItem}>
+                <MaterialCommunityIcons name="map-marker-outline" size={14} color={COLORS.textSecondary} />
+                <Text style={styles.statText}>{PLACES.length} จุด</Text>
+              </View>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.overviewPillButton}
+            onPress={() => showFullRoute()}
+          >
+            <MaterialCommunityIcons name="crop-free" size={14} color="#FFFFFF" />
+            <Text style={styles.overviewPillButtonText}>ภาพรวม</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
     </SafeAreaView>
   );
 }
@@ -213,42 +320,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFBF3",
-  },
-  headerBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 18,
-    paddingTop: 10,
-    paddingBottom: 10,
-    backgroundColor: "#FFFBF3",
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: "#2D2A26",
-  },
-  headerSubtitle: {
-    fontSize: 12.5,
-    color: "#8A8378",
-    marginTop: 2,
-  },
-  statsBadge: {
-    backgroundColor: "#2D2A26",
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignItems: "center",
-    marginLeft: 10,
-  },
-  statsNumber: {
-    color: "#FFFBF3",
-    fontWeight: "800",
-    fontSize: 16,
-  },
-  statsLabel: {
-    color: "#C9C2B3",
-    fontSize: 9.5,
-    marginTop: 1,
   },
   map: {
     flex: 1,
@@ -303,25 +374,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: "800",
   },
-  overviewButton: {
-    position: "absolute",
-    right: 14,
-    backgroundColor: "#2FBB15",
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 5,
-    zIndex: 10,
-  },
-  overviewButtonText: {
-    color: "#FFFBF3",
-    fontSize: 12.5,
-    fontWeight: "700",
-  },
   markerLabelBubble: {
     backgroundColor: "rgba(255,255,255,0.95)",
     borderRadius: 8,
@@ -343,7 +395,7 @@ const styles = StyleSheet.create({
   },
   calloutCard: {
     minWidth: 120,
-    maxWidth: 160,
+    maxWidth: 175,
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
     paddingVertical: 10,
@@ -359,9 +411,143 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#2D2A26",
   },
+  calloutHintRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
   calloutHint: {
     fontSize: 10.5,
     color: "#8A8378",
-    textAlign: "center",
+  },
+  searchWrapper: {
+    position: "absolute",
+    left: 14,
+    right: 14,
+    zIndex: 15,
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 5,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13.5,
+    color: COLORS.textPrimary,
+    padding: 0,
+  },
+  searchResultsBox: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    marginTop: 6,
+    maxHeight: 220,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 5,
+    overflow: "hidden",
+  },
+  searchResultRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  searchResultDot: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  searchResultText: {
+    flex: 1,
+    fontSize: 13.5,
+    color: COLORS.textPrimary,
+  },
+  bottomPanel: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: -3 },
+    elevation: 10,
+  },
+  panelLogoCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F3F8EF",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  panelLogoImage: {
+    width: 22,
+    height: 22,
+  },
+  bottomPanelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  bottomPanelTitle: {
+    fontSize: 14.5,
+    fontWeight: "800",
+    color: "#2D2A26",
+    marginBottom: 4,
+  },
+  bottomPanelStatsRow: {
+    flexDirection: "row",
+    gap: 14,
+  },
+  statItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  statText: {
+    fontSize: 12.5,
+    color: COLORS.textSecondary,
+  },
+  overviewPillButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#2FBB15",
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  overviewPillButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12.5,
+    fontWeight: "700",
   },
 });

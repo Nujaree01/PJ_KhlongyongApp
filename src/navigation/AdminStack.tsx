@@ -1,6 +1,3 @@
-// navigation/AdminStack.tsx
-// Stack Navigator ย่อยสำหรับแท็บ "แอดมิน" — เช็คสถานะ login ก่อนตัดสินหน้าเริ่มต้น
-
 import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -9,7 +6,8 @@ import AdminMenuScreen from "../screens/admin/AdminMenuScreen";
 import AdminEditListScreen from "../screens/admin/AdminEditListScreen";
 import AdminEditPlaceScreen from "../screens/admin/AdminEditPlaceScreen";
 import AdminHelpScreen from "../screens/admin/AdminHelpScreen";
-import { isLoggedIn } from "../utils/adminAuth";
+import AdminChangePasswordScreen from "../screens/admin/AdminChangePasswordScreen";
+import { subscribeToAuthState } from "../utils/adminAuth";
 import { COLORS } from "../theme/colors";
 
 const Stack = createNativeStackNavigator();
@@ -21,10 +19,10 @@ export default function AdminStack() {
   );
 
   useEffect(() => {
-    isLoggedIn().then((ok) => {
-      setInitialRoute(ok ? "AdminMenu" : "AdminLogin");
-      setChecking(false);
+    const unsubscribe = subscribeToAuthState((user) => {
+      setInitialRoute(user ? "AdminMenu" : "AdminLogin"); setChecking(false);
     });
+    return unsubscribe;
   }, []);
 
   if (checking) {
@@ -45,6 +43,7 @@ export default function AdminStack() {
       <Stack.Screen name="AdminEditList" component={AdminEditListScreen} />
       <Stack.Screen name="AdminEditPlace" component={AdminEditPlaceScreen} />
       <Stack.Screen name="AdminHelp" component={AdminHelpScreen} />
+      <Stack.Screen name="AdminChangePassword" component={AdminChangePasswordScreen} />
     </Stack.Navigator>
   );
 }

@@ -73,7 +73,6 @@ export function computeMarkerOffsets<
             longitude: place.longitude,
         };
 
-        // หาจุดที่ใกล้ที่สุดบนเส้นทางหลัก
         let nearestIdx = 0;
         let minDist = Infinity;
         routeCoords.forEach((pt, i) => {
@@ -84,7 +83,6 @@ export function computeMarkerOffsets<
             }
         });
 
-        // หาทิศทางเส้นทาง ณ จุดนั้น จากจุดก่อน-หลัง
         const prevIdx = Math.max(0, nearestIdx - 1);
         const nextIdx = Math.min(routeCoords.length - 1, nearestIdx + 1);
         const p1 = routeCoords[prevIdx];
@@ -94,11 +92,9 @@ export function computeMarkerOffsets<
         const dy = p2.latitude - p1.latitude;
         const len = Math.sqrt(dx * dx + dy * dy) || 1;
 
-        // เวกเตอร์ตั้งฉากกับเส้นทาง (หมุน 90 องศา)
         let perpX = -dy / len;
         let perpY = dx / len;
 
-        // สลับข้างซ้าย-ขวาสลับกันไปตามลำดับ กันป้ายชนกันเป็นแถวเดียวฝั่งเดียว
         const side = idx % 2 === 0 ? 1 : -1;
         perpX *= side;
         perpY *= side;
@@ -144,7 +140,6 @@ export function resolveMarkerOverlaps(
                     let len = Math.sqrt(dx * dx + dy * dy);
 
                     if (len === 0) {
-                        // จุดซ้อนกันพอดี สุ่มทิศเพื่อเริ่มแยก
                         dx = Math.random() - 0.5;
                         dy = Math.random() - 0.5;
                         len = Math.sqrt(dx * dx + dy * dy) || 1;

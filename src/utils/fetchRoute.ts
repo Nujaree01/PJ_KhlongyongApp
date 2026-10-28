@@ -64,7 +64,6 @@ export async function fetchRouteCoordinates(
   const origin = waypointsInOrder[0];
   const destination = waypointsInOrder[waypointsInOrder.length - 1];
   const middlePoints = waypointsInOrder.slice(1, -1);
-  // Google Directions รองรับ waypoint ไม่เกิน 25 จุด (ไม่รวม origin/destination)
   const waypointsParam = middlePoints
     .map((l) => `${l.latitude},${l.longitude}`)
     .join("|");
@@ -77,7 +76,6 @@ export async function fetchRouteCoordinates(
     key: DIRECTIONS_API_KEY,
   });
   if (waypointsParam) {
-    // ใช้ waypoints ตามลำดับที่กำหนดจริง (ไม่ให้ Google ปรับลำดับเอง)
     params.set("waypoints", waypointsParam);
   }
 

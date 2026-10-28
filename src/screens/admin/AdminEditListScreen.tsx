@@ -1,101 +1,136 @@
-// screens/admin/AdminEditListScreen.tsx
-// รายการสถานที่ทั้งหมด — แตะเพื่อไปแก้ไขทีละจุด
-
 import React from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { PLACES } from "../../data/places";
-import { CATEGORY_COLORS } from "../../theme/colors";
-import { COLORS } from "../../theme/colors";
+import { COLORS, CATEGORY_COLORS } from "../../theme/colors";
 
 export default function AdminEditListScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <MaterialCommunityIcons name="arrow-left" size={20} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>แก้ไขข้อมูลสถานที่</Text>
-      </View>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={["#35C71A", "#1B7A0B"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.hero, { paddingTop: insets.top + 16 }]}
+      >
+        <View style={styles.heroRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <MaterialCommunityIcons name="arrow-left" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.heroSubtitle}>จัดการข้อมูล</Text>
+            <Text style={styles.heroTitle}>แก้ไขข้อมูลสถานที่</Text>
+          </View>
+        </View>
+      </LinearGradient>
 
-      <FlatList
-        data={PLACES}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16 }}
-        renderItem={({ item }) => {
-          const cat = CATEGORY_COLORS[item.category];
-          return (
-            <TouchableOpacity
-              style={styles.row}
-              onPress={() =>
-                navigation.navigate("AdminEditPlace", { placeId: item.id })
-              }
-              activeOpacity={0.8}
-            >
-              <View style={[styles.dot, { backgroundColor: cat.fill }]}>
-                <MaterialCommunityIcons
-                  name={cat.icon as any}
-                  size={16}
-                  color={cat.text}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.rowTitle}>{item.name}</Text>
-                <Text style={styles.rowSubtitle}>{item.highlight}</Text>
-              </View>
-              <MaterialCommunityIcons
-                name="pencil-outline"
-                size={18}
-                color={COLORS.textSecondary}
-              />
-            </TouchableOpacity>
-          );
-        }}
-      />
-    </SafeAreaView>
+      <View style={styles.body}>
+        <View style={styles.card}>
+          <FlatList
+            data={PLACES}
+            keyExtractor={(item) => item.id}
+            scrollEnabled={false}
+            renderItem={({ item, index }) => {
+              const cat = CATEGORY_COLORS[item.category];
+              return (
+                <TouchableOpacity
+                  style={[
+                    styles.row,
+                    index < PLACES.length - 1 && styles.rowDivider,
+                  ]}
+                  onPress={() =>
+                    navigation.navigate("AdminEditPlace", { placeId: item.id })
+                  }
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.dot, { backgroundColor: cat.fill }]}>
+                    <MaterialCommunityIcons
+                      name={cat.icon as any}
+                      size={16}
+                      color={cat.text}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowTitle}>{item.name}</Text>
+                    <Text style={styles.rowSubtitle}>{item.highlight}</Text>
+                  </View>
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={20}
+                    color={COLORS.textSecondary}
+                  />
+                </TouchableOpacity>
+              );
+            }}
+          />
+        </View>
+      </View>
+    </View>
   );
 }
 
+const cardShadow = {
+  shadowColor: "#000",
+  shadowOpacity: 0.06,
+  shadowRadius: 8,
+  shadowOffset: { width: 0, height: 2 },
+  elevation: 2,
+} as const;
+
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: COLORS.background },
-  header: {
-    backgroundColor: COLORS.routeRed,
-    paddingTop: 14,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  hero: { paddingHorizontal: 20, paddingBottom: 38 },
+  heroRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   backButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.18)",
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitle: { color: "#fff", fontSize: 16, fontWeight: "700" },
+  heroSubtitle: {
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
+  heroTitle: { color: "#FFFFFF", fontSize: 19, fontWeight: "800", marginTop: 2 },
+  body: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 22,
+    marginTop: -18,
+    backgroundColor: COLORS.background,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    ...cardShadow,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.surface,
-    borderRadius: 14,
-    padding: 12,
-    marginBottom: 10,
     gap: 12,
+    paddingVertical: 12,
   },
+  rowDivider: { borderBottomWidth: 1, borderBottomColor: COLORS.border },
   dot: {
     width: 38,
     height: 38,
-    borderRadius: 19,
+    borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
   },
-  rowTitle: { fontSize: 14, fontWeight: "700", color: COLORS.textPrimary },
-  rowSubtitle: { fontSize: 12, color: COLORS.textSecondary, marginTop: 2 },
+  rowTitle: { fontSize: 13, fontWeight: "700", color: COLORS.textPrimary },
+  rowSubtitle: { fontSize: 11, color: COLORS.textSecondary, marginTop: 2 },
 });

@@ -1,53 +1,69 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// utils/adminAuth.ts
+import {
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  updatePassword,
+  updateEmail,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  User,
+} from "firebase/auth";
+import { auth } from "../services/firebase";
 
-const CREDENTIALS_KEY = "@khlongyong_admin_credentials";
-const SESSION_KEY = "@khlongyong_admin_session";
-
-const DEFAULT_USERNAME = "admin";
-const DEFAULT_PASSWORD = "admin1234";
-
-interface Credentials {
-  username: string;
-  password: string;
-}
-
-async function getCredentials(): Promise<Credentials> {
+export async function login(email: string, password: string): Promise<boolean> {
   try {
-    const raw = await AsyncStorage.getItem(CREDENTIALS_KEY);
-    if (raw) return JSON.parse(raw) as Credentials;
+    await signInWithEmailAndPassword(auth, email.trim(), password);
+    return true;
   } catch (err) {
-    console.warn("อ่านข้อมูล credentials ล้มเหลว:", err);
+    console.warn("login ล้มเหลว:", err);
+    return false;
   }
-  return { username: DEFAULT_USERNAME, password: DEFAULT_PASSWORD };
-}
-
-export async function login(
-  username: string,
-  password: string
-): Promise<boolean> {
-  const creds = await getCredentials();
-  const ok = username === creds.username && password === creds.password;
-  if (ok) {
-    await AsyncStorage.setItem(SESSION_KEY, "1");
-  }
-  return ok;
 }
 
 export async function logout(): Promise<void> {
-  await AsyncStorage.removeItem(SESSION_KEY);
+  await firebaseSignOut(auth);
 }
 
-export async function isLoggedIn(): Promise<boolean> {
-  const val = await AsyncStorage.getItem(SESSION_KEY);
-  return val === "1";
+export function isLoggedIn(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      resolve(!!user);
+    });
+  });
+}
+
+export function subscribeToAuthState(
+  callback: (user: User | null) => void
+): () => void {
+  return onAuthStateChanged(auth, callback);
 }
 
 export async function changeCredentials(
-  newUsername: string,
+  currentPassword: string,
+  newEmail: string,
   newPassword: string
-): Promise<void> {
-  await AsyncStorage.setItem(
-    CREDENTIALS_KEY,
-    JSON.stringify({ username: newUsername, password: newPassword })
-  );
+): Promise<{ ok: boolean; error?: string }> {
+  const user = auth.currentUser;
+  if (!user || !user.email) {
+    return { ok: false, error: "ยังไม่ได้เข้าสู่ระบบ" };
+  }
+
+  try {
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+
+    if (newEmail.trim() && newEmail.trim() !== user.email) {
+      await updateEmail(user, newEmail.trim());
+    }
+    if (newPassword.trim()) {
+      await updatePassword(user, newPassword);
+    }
+
+    return { ok: true };
+  } catch (err: any) {
+    console.warn("changeCredentials ล้มเหลว:", err);
+    return { ok: false, error: err?.message ?? "เกิดข้อผิดพลาด" };
+  }
 }
